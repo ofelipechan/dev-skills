@@ -6,9 +6,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build -w dev-skills",
-    "test": "npm test -w dev-skills",
-    "typecheck": "npm run typecheck -w dev-skills",
+    "build": "npm run build -w @ofelipechan/dev-skills",
+    "test": "npm test -w @ofelipechan/dev-skills",
+    "typecheck": "npm run typecheck -w @ofelipechan/dev-skills",
     "generate:registry": "tsx scripts/generate-registry.ts",
     "check:registry": "tsx scripts/generate-registry.ts --check"
   },

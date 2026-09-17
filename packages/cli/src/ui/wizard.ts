@@ -1,5 +1,5 @@
 /**
- * Interactive flow (`npx dev-skills` with no arguments). Collects answers,
+ * Interactive flow (`npx @ofelipechan/dev-skills` with no arguments). Collects answers,
  * builds the same requests the flag-based commands build, and hands them to
  * the installer. No filesystem access in this file.
  */

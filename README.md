@@ -4,13 +4,13 @@
 
 **One catalog of Agent Skills. One command to put them in front of every coding agent you use.**
 
-[![npm](https://img.shields.io/npm/v/dev-skills)](https://www.npmjs.com/package/dev-skills)
+[![npm](https://img.shields.io/npm/v/@ofelipechan/dev-skills)](https://www.npmjs.com/package/@ofelipechan/dev-skills)
 [![CI](https://github.com/ofelipechan/dev-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/ofelipechan/dev-skills/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
 
 ```bash
-npx dev-skills
+npx @ofelipechan/dev-skills
 ```
 
 </div>
@@ -72,7 +72,7 @@ Paths follow each agent's official discovery rules. Supporting another agent is 
 The three `bdd-*` skills are a set — install them together:
 
 ```bash
-npx dev-skills install bdd bdd-init bdd-regression
+npx @ofelipechan/dev-skills install bdd bdd-init bdd-regression
 ```
 
 Everything here is what I actually use day to day. New skills land when they have earned their place in a real project.
@@ -84,7 +84,7 @@ Everything here is what I actually use day to day. New skills land when they hav
 Run the wizard in any repository:
 
 ```bash
-npx dev-skills
+npx @ofelipechan/dev-skills
 ```
 
 ```
@@ -126,23 +126,23 @@ Every subcommand is non-interactive: when the flags are enough, nothing is asked
 
 ```bash
 # Browse
-npx dev-skills list                       # catalog, with [installed: project|global] markers
-npx dev-skills list --installed           # only what the lockfiles track
+npx @ofelipechan/dev-skills list                       # catalog, with [installed: project|global] markers
+npx @ofelipechan/dev-skills list --installed           # only what the lockfiles track
 
 # Install
-npx dev-skills install bdd                # defaults: every agent · project scope · copy
-npx dev-skills install bdd code-review    # several at once
-npx dev-skills install bdd --agent codex  # one agent (repeat --agent for more)
-npx dev-skills install bdd --global       # user-level directories
-npx dev-skills install bdd --agent claude-code --agent codex --strategy symlink
-npx dev-skills install bdd --force        # replace a directory dev-skills does not manage
+npx @ofelipechan/dev-skills install bdd                # defaults: every agent · project scope · copy
+npx @ofelipechan/dev-skills install bdd code-review    # several at once
+npx @ofelipechan/dev-skills install bdd --agent codex  # one agent (repeat --agent for more)
+npx @ofelipechan/dev-skills install bdd --global       # user-level directories
+npx @ofelipechan/dev-skills install bdd --agent claude-code --agent codex --strategy symlink
+npx @ofelipechan/dev-skills install bdd --force        # replace a directory dev-skills does not manage
 
 # Maintain
-npx dev-skills update                     # everything in the project lockfile with a newer registry hash
-npx dev-skills update bdd --global        # specific skills, global scope
-npx dev-skills update --force             # overwrite locally modified skills
-npx dev-skills remove bdd                 # unlink / delete only what the lockfile owns
-npx dev-skills remove bdd --global
+npx @ofelipechan/dev-skills update                     # everything in the project lockfile with a newer registry hash
+npx @ofelipechan/dev-skills update bdd --global        # specific skills, global scope
+npx @ofelipechan/dev-skills update --force             # overwrite locally modified skills
+npx @ofelipechan/dev-skills remove bdd                 # unlink / delete only what the lockfile owns
+npx @ofelipechan/dev-skills remove bdd --global
 ```
 
 | Flag | Applies to | Meaning |
