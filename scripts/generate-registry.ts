@@ -1,8 +1,8 @@
 /**
  * Discover every packages/skills/skills/** /SKILL.md and write packages/skills/registry.json.
  *
- *   pnpm generate:registry          write the file
- *   pnpm check:registry             exit 1 when the committed file is stale (CI)
+ *   npm run generate:registry          write the file
+ *   npm run check:registry             exit 1 when the committed file is stale (CI)
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -20,7 +20,7 @@ const next = JSON.stringify(registry, null, 2) + "\n";
 if (check) {
   const current = await readFile(outFile, "utf8").catch(() => "");
   if (current.replace(/\r\n/g, "\n") !== next) {
-    console.error(`${path.relative(process.cwd(), outFile)} is stale. Run: pnpm generate:registry`);
+    console.error(`${path.relative(process.cwd(), outFile)} is stale. Run: npm run generate:registry`);
     process.exit(1);
   }
   console.log(`${path.relative(process.cwd(), outFile)} is up to date (${registry.skills.length} skills)`);

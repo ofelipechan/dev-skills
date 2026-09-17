@@ -1,63 +1,177 @@
-# dev-skills
+<div align="center">
 
-A public catalog of reusable [Agent Skills](https://agentskills.io) and a CLI that installs them into **Claude Code** and **OpenAI Codex** — per project or globally, as independent copies or as one shared canonical copy.
+# 🧰 dev-skills
+
+**One catalog of Agent Skills. One command to put them in front of every coding agent you use.**
+
+[![npm](https://img.shields.io/npm/v/dev-skills)](https://www.npmjs.com/package/dev-skills)
+[![CI](https://github.com/ofelipechan/dev-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/ofelipechan/dev-skills/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
+
+```bash
+npx dev-skills
+```
+
+</div>
+
+---
+
+## 📖 Table of Contents
+
+- [✨ What is a Skill?](#-what-is-a-skill)
+- [🤖 Supported Agents](#-supported-agents)
+- [📚 Skills Catalog](#-skills-catalog)
+- [🚀 Quick Start](#-quick-start)
+- [⌨️ CLI Reference](#️-cli-reference)
+- [⚙️ How It Works](#️-how-it-works)
+- [🧩 Adding a Skill](#-adding-a-skill)
+- [🛠️ Development](#️-development)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+---
+
+## ✨ What is a Skill?
+
+A skill is a folder an AI coding agent can load on demand: a `SKILL.md` with instructions, plus any references, scripts or assets those instructions point at. Think of it as a playbook the agent reads only when the task matches — a BDD workflow, a review checklist, an architecture template — instead of stuffing every rule into one giant system prompt.
+
+```
+<name>/
+├── SKILL.md          # required — YAML frontmatter (name, description) + instructions
+├── references/       # optional — docs the skill reads
+├── scripts/          # optional — tools the skill runs
+└── assets/           # optional — templates, images, data
+```
+
+The **directory is the unit**. `dev-skills` never installs a lone `SKILL.md`; the whole folder travels together so every relative path inside it keeps working.
+
+---
+
+## 🤖 Supported Agents
+
+| Agent | Project install | Global install | Notes |
+| --- | --- | --- | --- |
+| **Claude Code** | `.claude/skills/<name>/` | `~/.claude/skills/<name>/` | |
+| **OpenAI Codex** | `.agents/skills/<name>/` | `~/.agents/skills/<name>/` | reads the shared `.agents/skills` directory natively |
+
+Paths follow each agent's official discovery rules. Supporting another agent is one entry in [`agents.ts`](packages/cli/src/services/agents.ts) — the installer never branches on agent ids. Missing yours? [Open an issue](https://github.com/ofelipechan/dev-skills/issues).
+
+---
+
+## 📚 Skills Catalog
+
+| Skill | Category | What it gives your agent |
+| --- | --- | --- |
+| [`bdd`](packages/skills/skills/development/bdd) | development | A gated feature workflow — feature file → approval → tests → code → run → refactor — with hard stops between phases |
+| [`bdd-init`](packages/skills/skills/development/bdd-init) | development | Bootstraps a project for BDD: `specs/`, a `TESTING_PHILOSOPHY.md` rendered for the detected stack, lint + parity scripts, Claude Code hooks and rules; offers missing test levels (e.g. E2E) |
+| [`bdd-regression`](packages/skills/skills/development/bdd-regression) | development | Bug-fix discipline: `@regression` scenario → failing test → fix → prove by reverting |
+| [`code-review`](packages/skills/skills/development/code-review) | development | Severity-tagged findings, one line each, with a concrete fix and a merge verdict |
+| [`system-design`](packages/skills/skills/architecture/system-design) | architecture | Framed requirements → 2–3 options → ADR, plus a review checklist for existing designs |
+
+The three `bdd-*` skills are a set — install them together:
+
+```bash
+npx dev-skills install bdd bdd-init bdd-regression
+```
+
+Everything here is what I actually use day to day. New skills land when they have earned their place in a real project.
+
+---
+
+## 🚀 Quick Start
+
+Run the wizard in any repository:
 
 ```bash
 npx dev-skills
 ```
 
 ```
-What would you like to do?      → Install skills
-Select skills                   → ◉ bdd  ◉ bdd-init  ◉ bdd-regression  ◯ code-review  ◯ system-design
-Select agents                   → ◉ Claude Code  ◉ OpenAI Codex
-Where should these be installed → Project | Global
-How should skills be shared?    → Symlink | Copy        (asked only when > 1 agent)
+◆  What would you like to do?
+│  ● Install skills
+│  ○ Update skills
+│  ○ Remove skills
+│  ○ List installed skills
+│
+◆  Select skills
+│  ◼ bdd            Gated Behaviour-Driven Development…
+│  ◼ bdd-init       Bootstrap the BDD harness in a project…
+│  ◼ bdd-regression Bug-fix workflow…
+│  ◻ code-review    Review a diff, branch, pull request…
+│  ◻ system-design  Design or review a software architecture…
+│
+◆  Select agents
+│  ◼ Claude Code
+│  ◼ OpenAI Codex
+│
+◆  Where should these skills be installed?
+│  ● Project      relative to the current directory
+│  ○ Global       user-level agent directories
+│
+◆  How should skills be shared between agents?     ← only asked for more than one agent
+│  ● Symlink      keep one canonical copy and link each agent to it
+│  ○ Copy         create an independent copy for each agent
+│
+◇  Installed 3 skill(s) into 2 agent(s) [project, symlink]
 ```
 
-## Non-interactive
+That is it — open your agent and the skills are discoverable.
+
+---
+
+## ⌨️ CLI Reference
+
+Every subcommand is non-interactive: when the flags are enough, nothing is asked. Built for scripts and CI.
 
 ```bash
-npx dev-skills list                                   # catalog (+ installed markers)
-npx dev-skills list --installed                       # what the lockfiles track
-npx dev-skills install bdd                            # all agents, project scope, copy
-npx dev-skills install bdd code-review system-design  # several skills
-npx dev-skills install bdd --agent codex              # one agent
+# Browse
+npx dev-skills list                       # catalog, with [installed: project|global] markers
+npx dev-skills list --installed           # only what the lockfiles track
+
+# Install
+npx dev-skills install bdd                # defaults: every agent · project scope · copy
+npx dev-skills install bdd code-review    # several at once
+npx dev-skills install bdd --agent codex  # one agent (repeat --agent for more)
+npx dev-skills install bdd --global       # user-level directories
 npx dev-skills install bdd --agent claude-code --agent codex --strategy symlink
-npx dev-skills install bdd --global                   # user-level directories
-npx dev-skills install bdd --force                    # overwrite an unmanaged destination
-npx dev-skills update                                 # every project skill whose registry hash changed
-npx dev-skills update bdd --global --force            # overwrite local edits
-npx dev-skills remove bdd                             # only what the lockfile owns
+npx dev-skills install bdd --force        # replace a directory dev-skills does not manage
+
+# Maintain
+npx dev-skills update                     # everything in the project lockfile with a newer registry hash
+npx dev-skills update bdd --global        # specific skills, global scope
+npx dev-skills update --force             # overwrite locally modified skills
+npx dev-skills remove bdd                 # unlink / delete only what the lockfile owns
+npx dev-skills remove bdd --global
 ```
 
-Subcommands never prompt. Defaults when a flag is omitted: every agent, `project` scope, `copy` strategy.
-
-## Where skills go
-
-| Agent | Project | Global |
+| Flag | Applies to | Meaning |
 | --- | --- | --- |
-| Claude Code | `.claude/skills/<name>/` | `~/.claude/skills/<name>/` |
-| OpenAI Codex | `.agents/skills/<name>/` | `~/.agents/skills/<name>/` |
+| `-a, --agent <id>` | install | `claude-code` or `codex`; repeatable; default all |
+| `-g, --global` | install · update · remove | act on `~/…` directories and the global lockfile |
+| `-s, --strategy <copy\|symlink>` | install | how files are laid out; default `copy` |
+| `-f, --force` | install · update | overwrite unmanaged or locally modified content |
+| `-i, --installed` | list | show installed instead of available |
 
-Paths follow each agent's official discovery rules. Adding an agent is one entry in [`packages/cli/src/services/agents.ts`](packages/cli/src/services/agents.ts); the installer never branches on agent ids.
+---
 
-### Copy
+## ⚙️ How It Works
 
-Each selected agent receives its own full copy of the skill directory. Editing one copy does not affect the others.
+### Copy vs. symlink
 
-### Symlink
+**Copy** gives every agent its own independent directory. Edit one, the others stay untouched.
 
-One canonical copy lives in the agent-neutral directory (`.agents/skills/<name>` for a project, `~/.agents/skills/<name>` globally) and every other agent gets a link to it:
+**Symlink** keeps a single canonical copy in the agent-neutral `.agents/skills/` (or `~/.agents/skills/` for global installs) and links every other agent to it:
 
 ```
-.claude/skills/bdd  →  .agents/skills/bdd  ←  (Codex reads this directory natively)
+.claude/skills/bdd  ──▶  .agents/skills/bdd  ◀──  Codex (reads this folder directly)
 ```
 
-Codex already discovers `.agents/skills`, so it uses the canonical copy directly. On Windows the links are directory junctions (no elevated privileges). If the OS refuses to create a link nothing is left half-installed; the wizard offers to fall back to copies.
+One source of truth; an edit is visible to every agent at once. On Windows the links are directory junctions, so no elevated shell is needed. If the OS refuses to link, nothing is left half-installed and the wizard offers to fall back to copies.
 
-## Lockfile
+### Lockfile
 
-`.agents/skills-lock.json` (project) and `~/.agents/skills-lock.json` (global) are the source of truth:
+`.agents/skills-lock.json` (project) and `~/.agents/skills-lock.json` (global) record what was installed, for which agents, how, and from which content hash:
 
 ```json
 {
@@ -74,78 +188,88 @@ Codex already discovers `.agents/skills`, so it uses the canonical copy directly
 }
 ```
 
-- `update` compares the lockfile hash with the registry hash; a locally modified skill (installed hash ≠ lockfile hash) is skipped unless `--force`. Copy mode refreshes every copy, symlink mode only the canonical one.
-- `remove` deletes only paths the lockfile lists — links are unlinked, never followed; the canonical copy goes when no agent references it. Anything not in the lockfile is refused.
-- Hashes ignore CRLF/LF differences so Windows checkouts do not look modified.
+- `update` compares the lockfile hash with the registry. A skill you edited locally (installed hash ≠ lockfile hash) is reported and skipped unless `--force`. Copy installs refresh every copy; symlink installs refresh only the canonical directory.
+- `remove` touches only paths the lockfile lists. Links are unlinked, never followed. The canonical copy is deleted once no agent references it. A folder that merely looks like a skill is never deleted.
+- Hashes ignore CRLF/LF differences, so a Windows checkout does not look "modified".
 
-## Catalog
+### Distribution
 
-```
-packages/skills/
-├── registry.json                 generated — never edit by hand
-└── skills/<category>/<name>/
-    ├── SKILL.md                  required: YAML frontmatter with name + description
-    ├── references/               optional
-    ├── scripts/                  optional
-    └── assets/                   optional
-```
+The catalog lives in this repository. `registry.json` is generated from the skill folders and carries, per skill, the description, the content hash and the full file list — so the CLI needs only raw file downloads from GitHub, no API calls and no rate limits. The source is abstracted behind a `RegistrySource` interface; a CDN would be another implementation with zero changes to the installer.
 
-The **directory** is the distribution unit — every file in it is installed. `registry.json` carries, per skill, the content hash and the file list, so the CLI needs only raw downloads from GitHub (no API calls, no rate limits).
+---
 
-| Skill | Category | What it does |
-| --- | --- | --- |
-| `bdd` | development | Gated feature workflow: feature file → approval → tests → code → run → refactor |
-| `bdd-init` | development | Bootstraps a project: `specs/`, stack-tailored `docs/TESTING_PHILOSOPHY.md`, lint + parity scripts, Claude Code hooks/rules; offers missing test levels |
-| `bdd-regression` | development | Bug fix: `@regression` scenario → failing test → fix → prove by revert |
-| `code-review` | development | Severity-tagged review of a diff / PR / file with concrete fixes |
-| `system-design` | architecture | Framed requirements → 2–3 options → ADR, plus an architecture review checklist |
+## 🧩 Adding a Skill
 
-The three `bdd-*` skills work together — install them as a set: `npx dev-skills install bdd bdd-init bdd-regression`.
-
-### Adding a skill
-
-1. Create `packages/skills/skills/<category>/<name>/SKILL.md` with frontmatter:
+1. Create the folder:
+   ```
+   packages/skills/skills/<category>/<name>/SKILL.md
+   ```
+2. Give `SKILL.md` frontmatter the agents can index:
    ```markdown
    ---
-   name: <kebab-case name>
-   description: What it does and exactly when it should (not) trigger.
+   name: <kebab-case-name>
+   description: What it does and exactly when it should — and should not — trigger.
    ---
    ```
-2. Add `references/`, `scripts/`, `assets/` as needed. Keep every path inside the skill directory relative.
-3. `pnpm generate:registry` and commit `registry.json` together with the skill. CI runs `pnpm check:registry` and fails when it is stale.
+3. Put supporting material in `references/`, `scripts/`, `assets/`. Reference them with paths relative to the skill folder.
+4. Regenerate and commit the registry with the skill:
+   ```bash
+   npm run generate:registry
+   ```
+   CI runs `npm run check:registry` and fails if the committed file is stale.
 
-## Development
+Guidelines: one job per skill · say when it should *not* trigger · prefer scripts the agent can run over prose it has to interpret · keep it self-contained.
+
+---
+
+## 🛠️ Development
 
 ```bash
-pnpm install
-pnpm test                 # vitest, sandboxed in temp dirs — never touches ~/.claude or ~/.agents
-pnpm typecheck
-pnpm build                # packages/cli/dist
-pnpm generate:registry
+npm install
+npm test                 # vitest — sandboxed in temp dirs, never touches ~/.claude or ~/.agents
+npm run typecheck
+npm run build                # → packages/cli/dist
+npm run generate:registry    # → packages/skills/registry.json
+```
 
-# run the CLI against the local catalog instead of GitHub
+Run the built CLI against the local catalog instead of GitHub:
+
+```bash
 DEV_SKILLS_SOURCE=$PWD/packages/skills node packages/cli/dist/index.js list
-DEV_SKILLS_REF=<branch>   # pin a GitHub ref
+DEV_SKILLS_REF=<branch-or-tag>   # pin a GitHub ref instead
 ```
 
-### Architecture
+### Layout
 
 ```
-CLI / Wizard (commander, @clack/prompts)      packages/cli/src/index.ts, ui/wizard.ts
-     ↓
-Commands (flags → request, print results)     packages/cli/src/commands/*
-     ↓
-Installer (install / update / remove / list)  packages/cli/src/services/installer.ts
-     ↓
-Agents · Registry · Lockfile · Hash            packages/cli/src/services/*
-     ↓
-Filesystem (fs/promises) · RegistrySource      GitHubSource | LocalSource
+dev-skills/
+├── packages/
+│   ├── cli/                 npm package "dev-skills"
+│   │   ├── src/index.ts     entry — wizard or subcommands
+│   │   ├── src/ui/          @clack/prompts wizard (no filesystem access)
+│   │   ├── src/commands/    flags → request → print
+│   │   └── src/services/    agents · registry · downloader · installer · lockfile · hash
+│   └── skills/
+│       ├── registry.json    generated
+│       └── skills/<category>/<name>/
+├── scripts/generate-registry.ts
+└── .github/workflows/       CI matrix (ubuntu · windows · macos) + npm publish on main
 ```
 
-- The wizard and the flag-based commands build the same `InstallRequest` and call the same installer.
-- Services never prompt or print; the UI never touches the filesystem.
-- `RegistrySource` abstracts where skills come from (GitHub raw today; a CDN would be another implementation).
+```
+Wizard / CLI flags  →  Commands  →  Installer  →  Agents · Registry · Lockfile  →  fs + RegistrySource
+```
 
-## License
+The wizard and the flag-based commands build the same `InstallRequest` and hand it to the same installer. Services never prompt or print; the UI never touches the filesystem; agent paths exist in exactly one file.
 
-MIT
+---
+
+## 🤝 Contributing
+
+Issues and pull requests welcome — a new skill, a new agent, a sharper edge on an existing one. Before opening a PR: `npm test`, `npm run typecheck`, `npm run check:registry`. Keep skills self-contained and describe precisely when they should trigger.
+
+---
+
+## 📄 License
+
+[MIT](LICENSE) — the CLI and every skill in this repository.

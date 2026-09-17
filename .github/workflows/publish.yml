@@ -20,18 +20,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          cache: npm
           registry-url: https://registry.npmjs.org
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check:registry
-      - run: pnpm typecheck
-      - run: pnpm test
+      - run: npm ci
+      - run: npm run check:registry
+      - run: npm run typecheck
+      - run: npm test
 
       - name: Skip when this version is already on npm
         id: version
