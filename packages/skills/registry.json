@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "system-design",
+      "description": "Design or review a software architecture — requirements, constraints, component boundaries, data flow, failure modes, trade-offs — and produce a decision record with named alternatives. Use when the user asks to \"design the system\", \"architect\", \"how should we structure\", \"review the architecture\", \"write an ADR\", or before implementing a feature that crosses service or data boundaries. Not for single-function implementation details.",
+      "category": "architecture",
+      "path": "architecture/system-design",
+      "hash": "sha256:c58e376ca82f456d6d6c723756dc5eb41fa189ff57644c78e3cfd127b351ff6d",
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "code-review",
+      "description": "Review a diff, branch, pull request or file for correctness bugs, security issues and needless complexity, and report one severity-tagged finding per line with a concrete fix. Use when the user says \"review\", \"code review\", \"review this PR / diff / file\", or asks whether a change is safe to merge. Not for writing new features or for style-only feedback.",
+      "category": "development",
+      "path": "development/code-review",
+      "hash": "sha256:68ba5e370bd17727a31aa6787e2c99db69abf64d514f9cdb8e29decf700b0248",
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "bdd",
+      "description": "Gated Behaviour-Driven Development for any new feature, business rule or bug fix — feature file → approval → tests → code → run. Also bootstraps a project (specs/, a stack-tailored docs/TESTING_PHILOSOPHY.md, lint + parity scripts) and runs regression fixes. Use whenever the user asks to build, add, change or implement behaviour, reports a bug, or says \"/bdd\", \"bdd init\", \"bdd regression\". Not for pure refactors with green tests.",
+      "category": "testing",
+      "path": "testing/bdd",
+      "hash": "sha256:d0f67337e32c129f8ea800c9af6f807294cc1e99e4ae34e9b3df10f4a3c2f527",
+      "files": [
+        "SKILL.md",
+        "references/TESTING_PHILOSOPHY.template.md",
+        "references/bdd.config.default.json",
+        "references/hooks.settings.json",
+        "references/rules/bdd-gate.md",
+        "references/rules/bdd-spec.md",
+        "references/rules/bdd-test.md",
+        "references/specs-README.md",
+        "scripts/bdd-gate.mjs",
+        "scripts/bdd-lib.mjs",
+        "scripts/bdd-parity.mjs",
+        "scripts/check-feature.mjs",
+        "scripts/check-test.mjs",
+        "scripts/render-philosophy.mjs"
+      ]
+    }
+  ]
+}

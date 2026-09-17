@@ -1,0 +1,22 @@
+{
+  "name": "dev-skills-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.10.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm --filter dev-skills run build",
+    "test": "pnpm --filter dev-skills run test",
+    "typecheck": "pnpm --filter dev-skills run typecheck",
+    "generate:registry": "tsx scripts/generate-registry.ts",
+    "check:registry": "tsx scripts/generate-registry.ts --check"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.3",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3"
+  },
+  "type": "module"
+}

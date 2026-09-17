@@ -1,0 +1,71 @@
+{
+  "specsDir": "specs",
+  "testGlobs": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
+  "ignoreDirs": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "coverage",
+    ".git",
+    ".claude/worktrees"
+  ],
+  "pyramidTags": [
+    "unit",
+    "integration",
+    "e2e"
+  ],
+  "modifierTags": [
+    "regression",
+    "unimplemented"
+  ],
+  "unimplementedTag": "unimplemented",
+  "phrasingBanlist": [
+    {
+      "pattern": "\\b(GET|POST|PUT|PATCH|DELETE)s?\\b",
+      "hint": "HTTP verb - describe the user action instead",
+      "flags": ""
+    },
+    {
+      "pattern": "\\b(status|response is|responds?)\\s+[1-5]\\d\\d\\b",
+      "hint": "status code - say rejected/succeeds/not found"
+    },
+    {
+      "pattern": "/api/",
+      "hint": "URL path - describe the resource, not the route"
+    },
+    {
+      "pattern": "https?://",
+      "hint": "literal URL - describe the source generically"
+    },
+    {
+      "pattern": "\\b\\w+\\(\\)",
+      "hint": "function call - describe the outcome, not the collaborator"
+    },
+    {
+      "pattern": "\\b\\w+(Service|Repository|Client|Controller|Handler|Mapper|Validator)\\b",
+      "hint": "class/module name - describe behaviour for the user"
+    },
+    {
+      "pattern": "\\b(mock|stub|spy|fake)s?\\b",
+      "hint": "test double - state the situation, not the double"
+    },
+    {
+      "pattern": "\\b(throws?|thrown)\\b\\s+\\w*Error",
+      "hint": "exception type - say 'rejected as ...'"
+    },
+    {
+      "pattern": "\\battribute\\b",
+      "hint": "attribute name - describe the visible effect"
+    },
+    {
+      "pattern": "\\b(Authorization header|JWT|token payload)\\b",
+      "hint": "transport detail - say 'signed in with a valid session'"
+    }
+  ]
+}
