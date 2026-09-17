@@ -23,7 +23,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "node ../../scripts/prepare-package.mjs && npm run build"
   },
   "dependencies": {
     "@clack/prompts": "1.8.1",
@@ -46,5 +47,9 @@
     "codex",
     "skills",
     "cli"
-  ]
+  ],
+  "homepage": "https://github.com/ofelipechan/dev-skills#readme",
+  "bugs": {
+    "url": "https://github.com/ofelipechan/dev-skills/issues"
+  }
 }
