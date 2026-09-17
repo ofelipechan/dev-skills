@@ -8,7 +8,7 @@ npx dev-skills
 
 ```
 What would you like to do?      → Install skills
-Select skills                   → ◉ bdd  ◯ code-review  ◉ system-design
+Select skills                   → ◉ bdd  ◉ bdd-init  ◉ bdd-regression  ◯ code-review  ◯ system-design
 Select agents                   → ◉ Claude Code  ◉ OpenAI Codex
 Where should these be installed → Project | Global
 How should skills be shared?    → Symlink | Copy        (asked only when > 1 agent)
@@ -94,9 +94,13 @@ The **directory** is the distribution unit — every file in it is installed. `r
 
 | Skill | Category | What it does |
 | --- | --- | --- |
-| `bdd` | testing | Gated feature-file → approval → tests → code workflow, project bootstrap with a stack-tailored testing philosophy, lint + parity scripts, regression flow |
+| `bdd` | development | Gated feature workflow: feature file → approval → tests → code → run → refactor |
+| `bdd-init` | development | Bootstraps a project: `specs/`, stack-tailored `docs/TESTING_PHILOSOPHY.md`, lint + parity scripts, Claude Code hooks/rules; offers missing test levels |
+| `bdd-regression` | development | Bug fix: `@regression` scenario → failing test → fix → prove by revert |
 | `code-review` | development | Severity-tagged review of a diff / PR / file with concrete fixes |
 | `system-design` | architecture | Framed requirements → 2–3 options → ADR, plus an architecture review checklist |
+
+The three `bdd-*` skills work together — install them as a set: `npx dev-skills install bdd bdd-init bdd-regression`.
 
 ### Adding a skill
 

@@ -7,7 +7,7 @@
     {{EXAMPLE_LANGUAGE}}                              replaced with the project's main language
 
   Traits: frontend, http-api, database, e2e, llm, observability.
-  Detection rules live in the bdd skill (scripts/render-philosophy.mjs --detect).
+  Detection rules live in bdd-init/SKILL.md (scripts/render-philosophy.mjs --detect).
 -->
 # Testing Philosophy
 

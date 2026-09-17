@@ -12,21 +12,21 @@
       ]
     },
     {
-      "name": "code-review",
-      "description": "Review a diff, branch, pull request or file for correctness bugs, security issues and needless complexity, and report one severity-tagged finding per line with a concrete fix. Use when the user says \"review\", \"code review\", \"review this PR / diff / file\", or asks whether a change is safe to merge. Not for writing new features or for style-only feedback.",
+      "name": "bdd",
+      "description": "Gated BDD workflow for any new feature, function or business rule — feature file → approval → tests → code → run → refactor. Use whenever the user asks to build, add, change or implement behaviour (even small), or says \"/bdd\". Not for bug fixes (use /bdd-regression) or pure refactors with green tests.",
       "category": "development",
-      "path": "development/code-review",
-      "hash": "sha256:68ba5e370bd17727a31aa6787e2c99db69abf64d514f9cdb8e29decf700b0248",
+      "path": "development/bdd",
+      "hash": "sha256:b30a1ee782c510ef16d6b3136489689f766f8e9191c9edd50ade2692fa53d516",
       "files": [
         "SKILL.md"
       ]
     },
     {
-      "name": "bdd",
-      "description": "Gated Behaviour-Driven Development for any new feature, business rule or bug fix — feature file → approval → tests → code → run. Also bootstraps a project (specs/, a stack-tailored docs/TESTING_PHILOSOPHY.md, lint + parity scripts) and runs regression fixes. Use whenever the user asks to build, add, change or implement behaviour, reports a bug, or says \"/bdd\", \"bdd init\", \"bdd regression\". Not for pure refactors with green tests.",
-      "category": "testing",
-      "path": "testing/bdd",
-      "hash": "sha256:d0f67337e32c129f8ea800c9af6f807294cc1e99e4ae34e9b3df10f4a3c2f527",
+      "name": "bdd-init",
+      "description": "Bootstrap the BDD harness in a project — creates specs/, docs/TESTING_PHILOSOPHY.md tailored to the project's stack and to the test levels in scope, offers missing test levels (e.g. E2E for a frontend) and seeds their feature files, sets up .claude/bdd.config.json, the parity npm script and the hook wiring. Use when specs/ or docs/TESTING_PHILOSOPHY.md is missing, when the user says \"set up BDD\", \"init BDD\", \"bdd init\", or when /bdd finds the harness incomplete.",
+      "category": "development",
+      "path": "development/bdd-init",
+      "hash": "sha256:ec82c07f05e107817b86eeb6f88a7ab9ca7f4a464e861e6a5b4099784de9e874",
       "files": [
         "SKILL.md",
         "references/TESTING_PHILOSOPHY.template.md",
@@ -42,6 +42,26 @@
         "scripts/check-feature.mjs",
         "scripts/check-test.mjs",
         "scripts/render-philosophy.mjs"
+      ]
+    },
+    {
+      "name": "bdd-regression",
+      "description": "Bug-fix workflow — reproduce with a failing @regression scenario + test at the lowest sufficient level, then fix, then prove the test fails with the fix reverted. Use when the user reports a bug, a wrong result, an error in production, or says \"/bdd-regression\". Not for new behaviour (use /bdd).",
+      "category": "development",
+      "path": "development/bdd-regression",
+      "hash": "sha256:822b0790ef2fe142e536a99061067650f0bc094a5d19820acb48a1a5c3e5dca3",
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "code-review",
+      "description": "Review a diff, branch, pull request or file for correctness bugs, security issues and needless complexity, and report one severity-tagged finding per line with a concrete fix. Use when the user says \"review\", \"code review\", \"review this PR / diff / file\", or asks whether a change is safe to merge. Not for writing new features or for style-only feedback.",
+      "category": "development",
+      "path": "development/code-review",
+      "hash": "sha256:68ba5e370bd17727a31aa6787e2c99db69abf64d514f9cdb8e29decf700b0248",
+      "files": [
+        "SKILL.md"
       ]
     }
   ]
