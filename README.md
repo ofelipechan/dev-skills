@@ -239,6 +239,17 @@ DEV_SKILLS_SOURCE=$PWD/packages/skills node packages/cli/dist/index.js list
 DEV_SKILLS_REF=<branch-or-tag>   # pin a GitHub ref instead
 ```
 
+### Releasing
+
+Bump `version` in `packages/cli/package.json`, commit, then push a matching tag:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+CI runs the full test matrix and publishes to npm only when the tag version equals the package version. Pushes to `main` never publish.
+
 ### Layout
 
 ```
@@ -253,7 +264,7 @@ dev-skills/
 │       ├── registry.json    generated
 │       └── skills/<category>/<name>/
 ├── scripts/generate-registry.ts
-└── .github/workflows/       CI matrix (ubuntu · windows · macos) + npm publish on main
+└── .github/workflows/       CI matrix (ubuntu · windows · macos); npm publish on release tags
 ```
 
 ```
