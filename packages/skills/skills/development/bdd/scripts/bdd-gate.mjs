@@ -18,7 +18,7 @@ const out = {
   hookSpecificOutput: {
     hookEventName: "PreToolUse",
     additionalContext:
-      `[bdd:gate] Editing production code (${rel}). BDD order is feature file -> approval -> tests -> code. ` +
+      `[bdd:gate] Editing production code (${rel}). BDD order is interview -> feature file -> approval -> tests -> code. ` +
       `If this edit adds or changes behaviour, confirm the scenario is approved in ${cfg.specsDir}/ and its bound test already exists (Red) before continuing. ` +
       `Pure refactor with green tests: proceed.`,
   },

@@ -13,25 +13,16 @@
     },
     {
       "name": "bdd",
-      "description": "Gated BDD workflow for any new feature, function or business rule — feature file → approval → tests → code → run → refactor. Use whenever the user asks to build, add, change or implement behaviour (even small), or says \"/bdd\". Not for bug fixes (use /bdd-regression) or pure refactors with green tests.",
+      "description": "Gated BDD workflow for any new feature, function or business rule — interview → feature file → approval → tests → code → run → refactor. Use whenever the user asks to build, add, change or implement behaviour (even small), or says \"/bdd\". Also use when the user says \"set up BDD\", \"init BDD\" or \"bdd init\" (harness bootstrap lives in references/init.md). Not for bug fixes (use /bdd-regression) or pure refactors with green tests.",
       "category": "development",
       "path": "development/bdd",
-      "hash": "sha256:b30a1ee782c510ef16d6b3136489689f766f8e9191c9edd50ade2692fa53d516",
-      "files": [
-        "SKILL.md"
-      ]
-    },
-    {
-      "name": "bdd-init",
-      "description": "Bootstrap the BDD harness in a project — creates specs/, docs/TESTING_PHILOSOPHY.md tailored to the project's stack and to the test levels in scope, offers missing test levels (e.g. E2E for a frontend) and seeds their feature files, sets up .claude/bdd.config.json, the parity npm script and the hook wiring. Use when specs/ or docs/TESTING_PHILOSOPHY.md is missing, when the user says \"set up BDD\", \"init BDD\", \"bdd init\", or when /bdd finds the harness incomplete.",
-      "category": "development",
-      "path": "development/bdd-init",
-      "hash": "sha256:ec82c07f05e107817b86eeb6f88a7ab9ca7f4a464e861e6a5b4099784de9e874",
+      "hash": "sha256:8990d7a8d433323e16b156eb6b702bdd14217fdb69408746de68acc50a551ba4",
       "files": [
         "SKILL.md",
         "references/TESTING_PHILOSOPHY.template.md",
         "references/bdd.config.default.json",
         "references/hooks.settings.json",
+        "references/init.md",
         "references/rules/bdd-gate.md",
         "references/rules/bdd-spec.md",
         "references/rules/bdd-test.md",
@@ -49,7 +40,7 @@
       "description": "Bug-fix workflow — reproduce with a failing @regression scenario + test at the lowest sufficient level, then fix, then prove the test fails with the fix reverted. Use when the user reports a bug, a wrong result, an error in production, or says \"/bdd-regression\". Not for new behaviour (use /bdd).",
       "category": "development",
       "path": "development/bdd-regression",
-      "hash": "sha256:822b0790ef2fe142e536a99061067650f0bc094a5d19820acb48a1a5c3e5dca3",
+      "hash": "sha256:6f89e19e23afd6f0338ffde7067db2373485e9d6e55f42327aae43ba21570844",
       "files": [
         "SKILL.md"
       ]

@@ -63,4 +63,4 @@ fix:      <files>
 run:      pass · lint ok · types ok · parity ok
 ```
 
-Suggest the commit as one logical unit: scenario + test + fix.
+Suggest the commit as one logical unit: scenario + test + fix — **suggest only**. Do not `git add` or commit; the working tree stays unstaged for the user to review. (The `git stash` in the revert-proof step is the one allowed git write: it must be popped before the report, leaving the tree exactly as before.)

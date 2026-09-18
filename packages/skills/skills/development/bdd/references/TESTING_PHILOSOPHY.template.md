@@ -1,5 +1,5 @@
 <!--
-  TEMPLATE for docs/TESTING_PHILOSOPHY.md — rendered by the /bdd-init skill.
+  TEMPLATE for docs/TESTING_PHILOSOPHY.md — rendered during /bdd harness init (bdd/references/init.md).
 
   Markers (all removed from the rendered output):
     <!-- IF:<trait> --> ... <!-- ENDIF:<trait> -->   keep block only when the project has <trait>
@@ -7,7 +7,7 @@
     {{EXAMPLE_LANGUAGE}}                              replaced with the project's main language
 
   Traits: frontend, http-api, database, e2e, llm, observability.
-  Detection rules live in bdd-init/SKILL.md (scripts/render-philosophy.mjs --detect).
+  Detection rules live in bdd/references/init.md (scripts/render-philosophy.mjs --detect).
 -->
 # Testing Philosophy
 
@@ -268,16 +268,16 @@ const user = { id: "u1", role: "guest" };
 
 ## 6. Workflow (BDD, outside-in)
 
-Behaviour drives everything. The feature file is written first, approved, and only then turned into tests and code. Each step is a gate — do not move to the next until the current one is complete.
+Behaviour drives everything. Requirements are settled with the user first, written as a feature file, approved, and only then turned into tests and code. Each step is a gate — do not move to the next until the current one is complete.
 
 1. **Describe the behaviour.** Write or update the `.feature` file in `specs/` (layout: `specs/README.md`; phrasing: § 7). Scenarios *are* the acceptance criteria. If any rule is unclear, ask — do not write a scenario on a guess.
-2. **Wait for approval.** Share the feature file. **Stop.** No test files, no production code until the scenarios are explicitly approved. Reviewer (human or agent) challenges missing edge cases here — it is far cheaper to fix a scenario than a test or an implementation.
+2. **Wait for approval.** List the files added/modified with the lint output (unfixed), share them. **Stop.** No test files, no production code until the scenarios are explicitly approved. Reviewer (human or agent) challenges missing edge cases here — it is far cheaper to fix a scenario than a test or an implementation.
 3. **Write the tests.** On approval, write the test files that bind every tagged scenario (§ 7), at the level the decision tree assigns (§ 3). Tests fail at this point — that is expected (Red). Do not touch production code yet.
 4. **Write the production code.** Only after all test files exist, implement the minimum code that makes them pass (Green). No extra behaviour beyond the approved scenarios.
 5. **Run the tests.** Unit + integration for the touched scope<!-- IF:e2e -->; E2E when a core flow was touched<!-- ENDIF:e2e -->. Everything green before the work is considered done. Fix failures you caused before continuing — **no deferred test fixes**.
 6. **Refactor.** Improve structure with all tests green. Behaviour unchanged, tests unchanged in intent. Re-run tests after every refactor step.
 
-Order is strict: **feature file → approval → tests → code → run**. Never write tests and implementation in the same step. Never write implementation first and "backfill" tests or scenarios.
+Order is strict: **interview → feature file → approval → tests → code → run**. Never write tests and implementation in the same step. Never write implementation first and "backfill" tests or scenarios.
 
 After two failed attempts at the same failing test, stop guessing — report the diagnosis and what was tried.
 

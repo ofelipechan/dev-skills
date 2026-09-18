@@ -63,16 +63,15 @@ Paths follow each agent's official discovery rules. Supporting another agent is 
 
 | Skill | Category | What it gives your agent |
 | --- | --- | --- |
-| [`bdd`](packages/skills/skills/development/bdd) | development | A gated feature workflow — feature file → approval → tests → code → run → refactor — with hard stops between phases |
-| [`bdd-init`](packages/skills/skills/development/bdd-init) | development | Bootstraps a project for BDD: `specs/`, a `TESTING_PHILOSOPHY.md` rendered for the detected stack, lint + parity scripts, Claude Code hooks and rules; offers missing test levels (e.g. E2E) |
+| [`bdd`](packages/skills/skills/development/bdd) | development | A gated feature workflow — interview → feature file → approval → tests → code → run → refactor — with hard stops between phases. Bootstraps the harness on first use: `specs/`, a `TESTING_PHILOSOPHY.md` rendered for the detected stack, lint + parity scripts, Claude Code hooks and rules |
 | [`bdd-regression`](packages/skills/skills/development/bdd-regression) | development | Bug-fix discipline: `@regression` scenario → failing test → fix → prove by reverting |
 | [`code-review`](packages/skills/skills/development/code-review) | development | Severity-tagged findings, one line each, with a concrete fix and a merge verdict |
 | [`system-design`](packages/skills/skills/architecture/system-design) | architecture | Framed requirements → 2–3 options → ADR, plus a review checklist for existing designs |
 
-The three `bdd-*` skills are a set — install them together:
+The two `bdd*` skills are a set — install them together:
 
 ```bash
-npx @ofelipechan/dev-skills install bdd bdd-init bdd-regression
+npx @ofelipechan/dev-skills install bdd bdd-regression
 ```
 
 Everything here is what I actually use day to day. New skills land when they have earned their place in a real project.
@@ -96,7 +95,6 @@ npx @ofelipechan/dev-skills
 │
 ◆  Select skills
 │  ◼ bdd            Gated Behaviour-Driven Development…
-│  ◼ bdd-init       Bootstrap the BDD harness in a project…
 │  ◼ bdd-regression Bug-fix workflow…
 │  ◻ code-review    Review a diff, branch, pull request…
 │  ◻ system-design  Design or review a software architecture…
@@ -238,6 +236,51 @@ Run the built CLI against the local catalog instead of GitHub:
 DEV_SKILLS_SOURCE=$PWD/packages/skills node packages/cli/dist/index.js list
 DEV_SKILLS_REF=<branch-or-tag>   # pin a GitHub ref instead
 ```
+
+### Installing the CLI globally from a local clone
+
+To use `dev-skills` as a global command while working on it — the same binary the npm package ships, but pointing at your checkout:
+
+```bash
+npm run build                   # dist/ must exist; the bin points at packages/cli/dist/index.js
+npm link -w @ofelipechan/dev-skills
+```
+
+`npm link` symlinks the package into your global `node_modules` and puts `dev-skills` on your `PATH`. Rebuild after each source change (`npm run build`) — the link follows `dist/`, not `src/`.
+
+**The catalog still comes from GitHub `main`.** `dev-skills list` will show what is pushed, not what is in your working tree. To test unpushed skill changes, point `DEV_SKILLS_SOURCE` at the local catalog — every command then reads your checkout and never touches the network:
+
+```bash
+# bash / Git Bash — per command
+DEV_SKILLS_SOURCE=/path/to/dev-skills/packages/skills dev-skills list
+```
+
+```powershell
+# PowerShell — once per session, then use dev-skills normally in any repo
+$env:DEV_SKILLS_SOURCE = "C:\path\to\dev-skills\packages\skills"
+dev-skills list
+```
+
+Two things to remember:
+
+- `LocalSource` reads `registry.json`, not the skill folders — run `npm run generate:registry` after editing a skill or the change is invisible.
+- `DEV_SKILLS_REF=<branch>` tests a *pushed* branch without merging it; it does not help with uncommitted work.
+
+To undo:
+
+```bash
+npm unlink -g @ofelipechan/dev-skills
+```
+
+Prefer a real install over a link (e.g. to test what users get)? Build, pack, install the tarball:
+
+```bash
+npm run build
+npm pack -w @ofelipechan/dev-skills
+npm install -g ./ofelipechan-dev-skills-<version>.tgz
+```
+
+`npm pack` does not run `prepublishOnly`, so build first. Remove with `npm uninstall -g @ofelipechan/dev-skills`.
 
 ### Releasing
 

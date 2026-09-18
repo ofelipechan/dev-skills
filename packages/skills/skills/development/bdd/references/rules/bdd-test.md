@@ -31,8 +31,38 @@ it("rejects the request when the session token has expired", () => { /* ... */ }
 - `describe` names the unit: `name()` · `ClassName` · `<Component/>` · `useHook()` · `METHOD /path`.
 
 ## Structure
-- Nested `describe("given …")` / `describe("when …")` when ≥2 contexts; shared setup in `beforeEach`. One context → no inner `describe`.
-- One invariant per test. Two assertions that can fail for different reasons → split.
+
+Use nested `describe` blocks to express Given/When/Then structure.
+
+```ts
+describe("AuthService", () => {
+  describe("login()", () => {
+    describe("given an unknown email", () => {
+      beforeEach(() => { /* arrange */ });
+
+      describe("when login is attempted", () => {
+        /**
+         * Unknown accounts cannot sign in.
+         * @scenario "signing in with an unknown email is rejected"
+         */
+        it("rejects the credentials", () => { /* assert */ });
+      });
+    });
+
+    describe("given a valid email and password", () => {
+      describe("when login is attempted", () => {
+        /**
+         * A successful sign-in starts a session for that user.
+         * @scenario "signing in with valid credentials starts a session"
+         */
+        it("issues a session token for the user", () => { /* assert */ });
+      });
+    });
+  });
+});
+```
+
+One invariant per test. Two assertions that can fail for different reasons → split.
 
 ## Doubles — real by default, fake only at external boundaries
 | Dependency | Approach |
