@@ -119,10 +119,10 @@ If you touched anything under `packages/skills/skills/`, run `npm run generate:r
 ### Releasing
 
 1. Bump `version` in `packages/cli/package.json` and commit.
-2. Push a tag that matches exactly: `git tag v0.2.0 && git push origin v0.2.0`.
-3. CI runs the matrix, verifies tag == package version, publishes with npm provenance.
+2. Publish a GitHub Release whose tag matches exactly: `gh release create v0.2.0 --generate-notes` (or via the GitHub UI).
+3. CI runs the matrix on the release, verifies tag == package version, publishes with npm provenance.
 
-Pushes to `main` never publish. Do not add publish steps outside the tag job.
+Pushes to `main` and bare tag pushes never publish — only a published Release does. Do not add publish steps outside the release job.
 
 ## Conventions
 

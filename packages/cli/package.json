@@ -1,6 +1,6 @@
 {
   "name": "@ofelipechan/dev-skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Install reusable Agent Skills into Claude Code, OpenAI Codex and future agents.",
   "license": "MIT",
   "repository": {

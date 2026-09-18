@@ -284,14 +284,13 @@ npm install -g ./ofelipechan-dev-skills-<version>.tgz
 
 ### Releasing
 
-Bump `version` in `packages/cli/package.json`, commit, then push a matching tag:
+Bump `version` in `packages/cli/package.json`, commit, then publish a GitHub Release with a matching tag:
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+gh release create v0.2.0 --generate-notes
 ```
 
-CI runs the full test matrix and publishes to npm only when the tag version equals the package version. Pushes to `main` never publish.
+CI runs the full test matrix on the release and publishes to npm only when the release tag equals the package version. Pushes to `main` and bare tag pushes never publish.
 
 ### Layout
 

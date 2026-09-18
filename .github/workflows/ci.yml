@@ -3,8 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -28,11 +29,11 @@ jobs:
       - run: npm run build
       - run: npm test
 
-  # Runs only for a pushed release tag (v1.2.3) and only after the test matrix passed.
-  # Tags are created manually: git tag v1.2.3 && git push origin v1.2.3
+  # Runs only when a GitHub Release is published (tag v1.2.3) and only after the test matrix passed.
+  # Pushing a tag alone does nothing; create the release on GitHub (or `gh release create v1.2.3`).
   publish:
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,12 +47,14 @@ jobs:
       - name: Tag must match packages/cli version
         working-directory: packages/cli
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${RELEASE_TAG#v}"
           VERSION=$(node -p "require('./package.json').version")
           if [ "$TAG" != "$VERSION" ]; then
             echo "tag v$TAG does not match package.json version $VERSION"
             exit 1
           fi
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
 
       - name: Publish
         working-directory: packages/cli
