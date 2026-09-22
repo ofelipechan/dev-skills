@@ -20,10 +20,11 @@ const SkillNameSchema = z
   .string()
   .min(1)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "kebab-case only");
+const SkillDescriptionSchema = z.string().min(1).max(1024);
 
 export const RegistrySkillSchema = z.object({
   name: SkillNameSchema,
-  description: z.string().min(1),
+  description: SkillDescriptionSchema,
   category: z.string().min(1),
   path: z.string().min(1),
   hash: z.string().regex(/^sha256:[0-9a-f]{64}$/),
@@ -37,7 +38,7 @@ export const RegistrySchema = z.object({
 
 const FrontmatterSchema = z.object({
   name: SkillNameSchema,
-  description: z.string().min(1),
+  description: SkillDescriptionSchema,
 });
 
 export function parseRegistry(raw: unknown): Registry {
@@ -87,6 +88,10 @@ export async function buildRegistry(catalogDir: string): Promise<Registry> {
     if (!parsed.success) throw new InvalidRegistryError(`${skillPath}/${SKILL_FILE} frontmatter: ${z.prettifyError(parsed.error)}`);
 
     const { name, description } = parsed.data;
+    const folderName = path.basename(dir);
+    if (name !== folderName) {
+      throw new InvalidRegistryError(`${skillPath}/${SKILL_FILE} frontmatter name "${name}" must match folder name "${folderName}"`);
+    }
     const dup = seen.get(name);
     if (dup) throw new InvalidRegistryError(`duplicate skill name "${name}" in ${dup} and ${skillPath}`);
     seen.set(name, skillPath);

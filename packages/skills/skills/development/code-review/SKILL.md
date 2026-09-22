@@ -1,6 +1,10 @@
 ---
 name: code-review
 description: Review a diff, branch, pull request or file for correctness bugs, security issues and needless complexity, and report one severity-tagged finding per line with a concrete fix. Use when the user says "review", "code review", "review this PR / diff / file", or asks whether a change is safe to merge. Not for writing new features or for style-only feedback.
+license: CC-BY-4.0
+metadata:
+  author: Felipe Chan - https://github.com/ofelipechan
+  version: 1.1.0
 ---
 
 # Code review

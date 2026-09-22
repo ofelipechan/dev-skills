@@ -18,7 +18,7 @@ Extract of `docs/TESTING_PHILOSOPHY.md` § 3, § 7. Hook `check-feature.mjs` enf
 | `@integration` | rendering, boundary contracts, error handling, edge cases, navigation, UI elements exist, full workflow of a new/changing feature |
 | `@e2e` | one of the 5–10 stable core happy paths (only if not already covered) |
 
-Modifiers sit beside the pyramid tag, never instead: `@regression` (guards a fixed bug), `@unimplemented` (rule asserted, test not yet written — removed only with a binding or with the scenario's deletion).
+Modifiers sit beside the pyramid tag, never instead of it: `@regression` (guards a fixed bug), `@unimplemented` (rule asserted, production behavior not yet delivered — every new scenario starts with it; removed only when its bound test is green, or with the scenario's deletion).
 
 Decision tree, in order, stop at first match: stable core happy path → `@e2e` · UI elements exist / navigation / error handling / edge cases / new-feature workflow → `@integration` · pure logic → `@unit` · production regression → lowest sufficient level + `@regression`.
 

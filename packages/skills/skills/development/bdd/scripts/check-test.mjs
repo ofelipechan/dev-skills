@@ -6,7 +6,7 @@
 //   - @scenario title that does not match any Scenario in specs byte-for-byte
 //   - the same scenario bound twice (across all test files)
 //
-// CLI:   node .claude/hooks/check-test.mjs [file ...]   (no args = all test files)
+// CLI:   node <agent runtime dir>/check-test.mjs [file ...]   (no args = all test files)
 // Hook:  --hook  reads {tool_input.file_path} from stdin.
 import fs from "node:fs";
 import {
@@ -67,14 +67,8 @@ for (const rel of files) {
       errors.push(`${loc} scenario "${b.scenario}" is bound ${dups.length} times (also at ${others.join(", ")})`);
     }
   }
-
-  // Scenario tagged @unimplemented but now bound -> remind to drop the tag.
-  for (const b of bindings) {
-    const s = scenarios.find((x) => x.title === b.scenario);
-    if (s && s.tags.includes(cfg.unimplementedTag)) {
-      warnings.push(`${s.file}:${s.line} "${s.title}" is bound at ${rel}:${b.line}; remove @${cfg.unimplementedTag}`);
-    }
-  }
+  // A bound scenario may still carry @unimplemented: the test exists but production code
+  // is not green yet. /bdd drops the tag per scenario during Implement, so no warning here.
 }
 
 if (!isHook && errors.length === 0) {

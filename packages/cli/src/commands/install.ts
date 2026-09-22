@@ -16,6 +16,14 @@ export interface InstallFlags {
 
 const STRATEGIES: Strategy[] = ["copy", "symlink"];
 
+/** Pseudo skill name meaning "every skill the current list offers". */
+export const ALL = "all";
+
+/** Replace the `all` keyword with every available name; an explicit list passes through unchanged. */
+export function expandAll(selected: string[], available: string[]): string[] {
+  return selected.includes(ALL) ? [...available] : selected;
+}
+
 export function parseAgents(value: string | string[] | undefined): AgentId[] {
   if (value === undefined) return [...AGENT_IDS];
   const ids = Array.isArray(value) ? value : [value];
@@ -45,15 +53,17 @@ export function toInstallRequest(skills: string[], flags: InstallFlags): Install
 export function registerInstall(program: Command): void {
   program
     .command("install <skills...>")
-    .description("Install one or more skills")
+    .description(`Install one or more skills ("${ALL}" installs every skill in the catalog)`)
     .option("-a, --agent <id>", `Target agent (repeatable). Default: all (${AGENT_IDS.join(", ")})`, collect, undefined)
     .option("-g, --global", "Install into the user-level skills directories instead of the project")
     .option("-s, --strategy <copy|symlink>", "How files are laid out (default: copy)")
     .option("-f, --force", "Overwrite destinations that dev-skills does not manage")
     .action(async (skills: string[], flags: InstallFlags) => {
       try {
-        const req = toInstallRequest(skills, flags);
-        const result = await install(req, createContext());
+        const ctx = createContext();
+        const names = skills.includes(ALL) ? expandAll(skills, (await ctx.source.getRegistry()).skills.map((s) => s.name)) : skills;
+        const req = toInstallRequest(names, flags);
+        const result = await install(req, ctx);
         printInstallResult(req, result);
       } catch (err) {
         printError(err);

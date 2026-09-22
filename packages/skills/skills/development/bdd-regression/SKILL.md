@@ -1,6 +1,10 @@
 ---
 name: bdd-regression
 description: Bug-fix workflow — reproduce with a failing @regression scenario + test at the lowest sufficient level, then fix, then prove the test fails with the fix reverted. Use when the user reports a bug, a wrong result, an error in production, or says "/bdd-regression". Not for new behaviour (use /bdd).
+license: CC-BY-4.0
+metadata:
+  author: Felipe Chan - https://github.com/ofelipechan
+  version: 1.1.0
 ---
 
 # /bdd-regression — reproduce → fix → prove
@@ -25,11 +29,11 @@ Scenario: <observable rule that the bug violated>
   Then …
 ```
 
-Lint: `node .claude/hooks/check-feature.mjs <file>`. Show it. Small bugs: continue without a formal approval stop, but state the scenario in the message so the user can object. Ambiguous or behaviour-changing bugs: **stop and wait** like `/bdd` gate 1.
+Lint with the installed BDD skill's `scripts/check-feature.mjs`. Show it. Small bugs: continue without a formal approval stop, but state the scenario in the message so the user can object. Ambiguous or behavior-changing bugs: **stop and wait** like `/bdd` gate 1.
 
 ## 3. Failing test
 
-Bind it (`@scenario "<title>"`, rules in `.claude/rules/bdd-test.md`). Run the touched scope. The test must **fail on the current code for the bug's reason** — if it passes, the reproduction is wrong; fix the test before touching production code.
+Bind it (`@scenario "<title>"`, following the BDD skill's `references/test-binding.md`). Run the touched scope. The test must **fail on the current code for the bug's reason** — if it passes, the reproduction is wrong; fix the test before touching production code.
 
 ## 4. Fix
 
@@ -37,21 +41,14 @@ Minimum change that makes the test green. No surrounding refactor in the same st
 
 ## 5. Prove
 
-Revert only the fix (keep the test), run the test, confirm it fails, restore the fix, run again, confirm it passes. In git terms:
-
-```bash
-git stash push -- <fixed files>     # test stays
-<run the test>                      # expect FAIL
-git stash pop
-<run the test>                      # expect PASS
-```
+Temporarily reverse only the fix hunks (keep the test), run the test, confirm it fails, restore those hunks immediately, then run again and confirm it passes. Do not use `git stash`, `git checkout`, `git restore`, or another whole-file operation: the fixed files may contain unrelated user edits. If the fix cannot be isolated safely, skip the destructive proof and report why.
 
 Report both outputs (titles + result lines are enough). If the test cannot fail with the fix reverted, it does not guard the bug — go back to 3.
 
 ## 6. Run + report
 
 ```bash
-node .claude/hooks/bdd-parity.mjs
+node <bdd skill dir>/scripts/bdd-parity.mjs
 <project tests for the touched scope> ; <lint> ; <typecheck>
 ```
 
@@ -63,4 +60,4 @@ fix:      <files>
 run:      pass · lint ok · types ok · parity ok
 ```
 
-Suggest the commit as one logical unit: scenario + test + fix — **suggest only**. Do not `git add` or commit; the working tree stays unstaged for the user to review. (The `git stash` in the revert-proof step is the one allowed git write: it must be popped before the report, leaving the tree exactly as before.)
+Suggest the commit as one logical unit: scenario + test + fix — **suggest only**. Do not run commands that change git state; the working tree stays unstaged for the user to review.

@@ -1,9 +1,14 @@
 // Shared helpers for the BDD hooks. Zero dependencies; Node >= 18.
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-const CONFIG_PATH = path.join(ROOT, ".claude", "bdd.config.json");
+const SCRIPT_PATH = fileURLToPath(import.meta.url).split(path.sep).join("/");
+const CONFIG_PATHS = {
+  claude: path.join(ROOT, ".claude", "bdd.config.json"),
+  codex: path.join(ROOT, ".agents", "bdd.config.json"),
+};
 
 const DEFAULTS = {
   specsDir: "specs",
@@ -16,8 +21,15 @@ const DEFAULTS = {
 };
 
 export function loadConfig() {
-  if (!fs.existsSync(CONFIG_PATH)) return { ...DEFAULTS };
-  const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+  const preferredAgent = SCRIPT_PATH.includes("/.agents/") ? "codex" : SCRIPT_PATH.includes("/.claude/") ? "claude" : undefined;
+  const preferredPath = preferredAgent ? CONFIG_PATHS[preferredAgent] : undefined;
+  if (preferredPath) {
+    if (!fs.existsSync(preferredPath)) return { ...DEFAULTS };
+    return { ...DEFAULTS, ...JSON.parse(fs.readFileSync(preferredPath, "utf8")) };
+  }
+  const configPath = Object.values(CONFIG_PATHS).find((candidate) => fs.existsSync(candidate));
+  if (!configPath) return { ...DEFAULTS };
+  const raw = JSON.parse(fs.readFileSync(configPath, "utf8"));
   return { ...DEFAULTS, ...raw };
 }
 
@@ -122,17 +134,18 @@ export function parseFeature(rel) {
 const BINDING_RE = /@scenario\s+"([^"]+)"/;
 const TEST_RE = /^\s*(?:it|test)(\.each\b[^(]*\([^)]*\)|\.skip|\.todo|\.only)?\s*\(\s*(["'`])((?:\\.|(?!\2).)*)\2/;
 
-// Does the JSDoc block ending right above `lineIdx` contain a @scenario binding?
+// Return the @scenario binding in the JSDoc block ending right above `lineIdx`.
 function bindingAbove(lines, lineIdx) {
   let j = lineIdx - 1;
   while (j >= 0 && /^\s*$/.test(lines[j])) j--;
-  if (j < 0 || !/\*\/\s*$/.test(lines[j])) return false;
+  if (j < 0 || !/\*\/\s*$/.test(lines[j])) return null;
   while (j >= 0) {
-    if (BINDING_RE.test(lines[j])) return true;
-    if (/\/\*\*/.test(lines[j])) return false;
+    const binding = lines[j].match(BINDING_RE);
+    if (binding) return { scenario: binding[1], line: j + 1 };
+    if (/\/\*\*/.test(lines[j])) return null;
     j--;
   }
-  return false;
+  return null;
 }
 
 /**
@@ -146,22 +159,18 @@ export function parseTestFile(rel) {
   const tests = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const b = lines[i].match(BINDING_RE);
-    if (b) bindings.push({ scenario: b[1], line: i + 1, file: rel });
-  }
-
-  for (let i = 0; i < lines.length; i++) {
     const m = lines[i].match(TEST_RE);
     if (!m) continue;
     const kind = m[1] ? m[1].replace(/\(.*$/, "").replace(/\s+/g, "") : "";
-    let hasBinding = bindingAbove(lines, i);
-    if (!hasBinding && /\.each\b/.test(lines[i]) === false) {
+    let binding = bindingAbove(lines, i);
+    if (!binding && /\.each\b/.test(lines[i]) === false) {
       // `it.each([...])("title", ...)` spread over lines: title line differs from the it.each line.
       let k = i;
       while (k >= 0 && !/^\s*(?:it|test)\.each\b/.test(lines[k])) k--;
-      if (k >= 0 && k !== i) hasBinding = bindingAbove(lines, k);
+      if (k >= 0 && k !== i) binding = bindingAbove(lines, k);
     }
-    tests.push({ title: m[3], line: i + 1, kind, hasBinding, file: rel });
+    if (binding) bindings.push({ ...binding, file: rel });
+    tests.push({ title: m[3], line: i + 1, kind, hasBinding: binding !== null, file: rel });
   }
   return { bindings, tests };
 }

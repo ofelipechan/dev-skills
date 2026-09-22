@@ -56,6 +56,20 @@ describe("buildRegistry()", () => {
     await expect(buildRegistry(sb.catalog)).rejects.toBeInstanceOf(InvalidRegistryError);
   });
 
+  /** Skill names must match their folder so discovery and installation agree. */
+  it("rejects a skill whose name differs from its folder", async () => {
+    await writeSkill(sb.catalog, "testing/mismatch", { "SKILL.md": "---\nname: other\ndescription: mismatch\n---\n" });
+    await expect(buildRegistry(sb.catalog)).rejects.toBeInstanceOf(InvalidRegistryError);
+  });
+
+  /** Descriptions share the Agent Skills discovery limit. */
+  it("rejects a description longer than 1024 characters", async () => {
+    await writeSkill(sb.catalog, "testing/verbose", {
+      "SKILL.md": `---\nname: verbose\ndescription: ${"x".repeat(1025)}\n---\n`,
+    });
+    await expect(buildRegistry(sb.catalog)).rejects.toBeInstanceOf(InvalidRegistryError);
+  });
+
   /** Two skills with one name cannot be addressed unambiguously. */
   it("rejects duplicate skill names", async () => {
     await writeSkill(sb.catalog, "other/bdd", { "SKILL.md": "---\nname: bdd\ndescription: dup\n---\n" });

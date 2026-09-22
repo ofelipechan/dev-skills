@@ -10,6 +10,7 @@ import { SymlinkError } from "../services/errors.js";
 import { install, listInstalled, remove, update } from "../services/installer.js";
 import type { AgentId, InstallContext, InstallRequest, Registry, Scope, Strategy } from "../services/types.js";
 import { printError } from "../commands/output.js";
+import { ALL, expandAll } from "../commands/install.js";
 
 type Action = "install" | "update" | "remove" | "list";
 
@@ -53,13 +54,36 @@ async function askScope(message = "Where should these skills be installed?"): Pr
   return scope;
 }
 
-async function askSkills(registry: Registry, message = "Select skills"): Promise<string[]> {
-  const skills = bail(await p.multiselect<string>({
+/**
+ * Multiselect with a leading "all" entry. Picking it selects every skill in
+ * `options`; the expanded list is then confirmed before anything runs.
+ * Returns `undefined` when the user declines the confirmation.
+ */
+async function askSkillsWithAll(
+  message: string,
+  options: { value: string; label: string; hint?: string }[],
+  initialValues: string[],
+  verb: string,
+): Promise<string[] | undefined> {
+  const picked = bail(await p.multiselect<string>({
     message,
-    options: registry.skills.map((s) => ({ value: s.name, label: s.name, hint: s.description })),
+    options: [{ value: ALL, label: "all", hint: `every skill listed below (${options.length})` }, ...options],
+    initialValues,
     required: true,
   }));
-  return skills;
+  const skills = expandAll(picked, options.map((o) => o.value));
+  if (!picked.includes(ALL)) return skills;
+  const sure = bail(await p.confirm({ message: `${verb} all ${skills.length} skill(s): ${skills.join(", ")}?` }));
+  return sure ? skills : undefined;
+}
+
+async function askSkills(registry: Registry, message = "Select skills"): Promise<string[] | undefined> {
+  return askSkillsWithAll(
+    message,
+    registry.skills.map((s) => ({ value: s.name, label: s.name, hint: s.description })),
+    [],
+    "Install",
+  );
 }
 
 async function askAgents(): Promise<AgentId[]> {
@@ -87,6 +111,7 @@ async function askStrategy(agentCount: number): Promise<Strategy> {
 
 async function runInstall(ctx: InstallContext, registry: Registry): Promise<void> {
   const skills = await askSkills(registry);
+  if (!skills) return;
   const agents = await askAgents();
   const scope = await askScope();
   const strategy = await askStrategy(agents.length);
@@ -129,12 +154,13 @@ async function runUpdate(ctx: InstallContext): Promise<void> {
     p.log.warn(`No ${scope} skills installed.`);
     return;
   }
-  const skills = bail(await p.multiselect<string>({
-    message: "Select skills to update",
-    options: inScope.map((i) => ({ value: i.name, label: i.name, hint: i.updateAvailable ? "update available" : "up to date" })),
-    initialValues: inScope.filter((i) => i.updateAvailable).map((i) => i.name),
-    required: true,
-  }));
+  const skills = await askSkillsWithAll(
+    "Select skills to update",
+    inScope.map((i) => ({ value: i.name, label: i.name, hint: i.updateAvailable ? "update available" : "up to date" })),
+    inScope.filter((i) => i.updateAvailable).map((i) => i.name),
+    "Update",
+  );
+  if (!skills) return;
 
   const s = p.spinner();
   s.start("Updating");

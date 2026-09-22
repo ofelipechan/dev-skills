@@ -63,15 +63,19 @@ Paths follow each agent's official discovery rules. Supporting another agent is 
 
 | Skill | Category | What it gives your agent |
 | --- | --- | --- |
-| [`bdd`](packages/skills/skills/development/bdd) | development | A gated feature workflow — interview → feature file → approval → tests → code → run → refactor — with hard stops between phases. Bootstraps the harness on first use: `specs/`, a `TESTING_PHILOSOPHY.md` rendered for the detected stack, lint + parity scripts, Claude Code hooks and rules |
+| [`bdd`](packages/skills/skills/development/bdd) | development | Entry point of the gated feature workflow: preflight, harness bootstrap on first use (`specs/`, a `TESTING_PHILOSOPHY.md` rendered for the detected stack, lint + parity scripts, Claude Code hooks and rules), then hands off to `bdd-plan` and `bdd-implement` |
+| [`bdd-plan`](packages/skills/skills/development/bdd-plan) | development | Discovery + Specify: interview (via `grill-me`) → tagged `.feature` files → lint → hard stop for approval. Never touches tests or code |
+| [`bdd-implement`](packages/skills/skills/development/bdd-implement) | development | Bind tests (red) → implement → verify, for approved scenarios only. One binding per scenario, `@unimplemented` removed one green test at a time |
 | [`bdd-regression`](packages/skills/skills/development/bdd-regression) | development | Bug-fix discipline: `@regression` scenario → failing test → fix → prove by reverting |
 | [`code-review`](packages/skills/skills/development/code-review) | development | Severity-tagged findings, one line each, with a concrete fix and a merge verdict |
+| [`domain-mapping`](packages/skills/skills/architecture/domain-mapping) | architecture | Evidence-backed subdomain classification, ubiquitous-language analysis, bounded-context proposals, and a context map |
 | [`system-design`](packages/skills/skills/architecture/system-design) | architecture | Framed requirements → 2–3 options → ADR, plus a review checklist for existing designs |
+| [`grill-me`](packages/skills/skills/development/grill-me) | development | Relentless interview of a plan, decision or idea — design tree, frontier rounds, multiple-choice questions with one recommendation — until nothing is silently assumed. `bdd` Discovery calls it |
 
-The two `bdd*` skills are a set — install them together:
+The `bdd*` skills are a set — install them together:
 
 ```bash
-npx @ofelipechan/dev-skills install bdd bdd-regression
+npx @ofelipechan/dev-skills install bdd bdd-plan bdd-implement bdd-regression
 ```
 
 Everything here is what I actually use day to day. New skills land when they have earned their place in a real project.
@@ -94,6 +98,7 @@ npx @ofelipechan/dev-skills
 │  ○ List installed skills
 │
 ◆  Select skills
+│  ◻ all            every skill listed below              ← selecting it asks for confirmation
 │  ◼ bdd            Gated Behaviour-Driven Development…
 │  ◼ bdd-regression Bug-fix workflow…
 │  ◻ code-review    Review a diff, branch, pull request…
@@ -130,6 +135,7 @@ npx @ofelipechan/dev-skills list --installed           # only what the lockfiles
 # Install
 npx @ofelipechan/dev-skills install bdd                # defaults: every agent · project scope · copy
 npx @ofelipechan/dev-skills install bdd code-review    # several at once
+npx @ofelipechan/dev-skills install all                # every skill in the catalog
 npx @ofelipechan/dev-skills install bdd --agent codex  # one agent (repeat --agent for more)
 npx @ofelipechan/dev-skills install bdd --global       # user-level directories
 npx @ofelipechan/dev-skills install bdd --agent claude-code --agent codex --strategy symlink

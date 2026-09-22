@@ -1,6 +1,23 @@
 import { describe, it, expect } from "vitest";
-import { toInstallRequest } from "../src/commands/install.js";
+import { expandAll, toInstallRequest } from "../src/commands/install.js";
 import { UnsupportedAgentError } from "../src/services/errors.js";
+
+describe("expandAll()", () => {
+  /** The "all" keyword stands for every skill the caller offers. */
+  it("expands the all keyword to every available skill", () => {
+    expect(expandAll(["all"], ["bdd", "code-review"])).toEqual(["bdd", "code-review"]);
+  });
+
+  /** "all" wins even when mixed with explicit names — nothing is listed twice. */
+  it("ignores explicit names next to the all keyword", () => {
+    expect(expandAll(["bdd", "all"], ["bdd", "code-review"])).toEqual(["bdd", "code-review"]);
+  });
+
+  /** Explicit selections pass through untouched. */
+  it("leaves an explicit selection unchanged", () => {
+    expect(expandAll(["bdd"], ["bdd", "code-review"])).toEqual(["bdd"]);
+  });
+});
 
 describe("toInstallRequest()", () => {
   /** Flags map one-to-one onto the installer request; nothing is prompted. */

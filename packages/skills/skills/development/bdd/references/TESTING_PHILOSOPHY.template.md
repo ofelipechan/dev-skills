@@ -162,7 +162,7 @@ Modifiers sit **beside** the pyramid tag, never instead of it:
 | Modifier | Meaning |
 | --- | --- |
 | `@regression` | guards a previously fixed bug (§ 9) |
-| `@unimplemented` | rule asserted, test not yet written — a tracked promise, removed only with a binding or with the scenario's deletion |
+| `@unimplemented` | rule asserted, production behavior not yet delivered — every new scenario starts with it; a tracked promise, removed only when its bound test is green or with the scenario's deletion |
 
 ```gherkin
 @regression @integration

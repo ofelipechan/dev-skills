@@ -3,7 +3,7 @@
 // Errors: scenario without exactly one pyramid tag, unknown tag, duplicate title.
 // Warnings: phrasing violations (transport/implementation words in scenario text).
 //
-// CLI:   node .claude/hooks/check-feature.mjs [file ...]   (no args = all feature files)
+// CLI:   node <agent runtime dir>/check-feature.mjs [file ...]   (no args = all feature files)
 // Hook:  --hook  reads {tool_input.file_path} from stdin.
 import fs from "node:fs";
 import path from "node:path";
@@ -29,7 +29,12 @@ if (isHook) {
 
 const errors = [];
 const warnings = [];
-const seenTitles = new Map();
+const titleLocations = new Map();
+
+for (const scenario of listFeatureFiles(cfg).flatMap(parseFeature)) {
+  const loc = `${scenario.file}:${scenario.line}`;
+  titleLocations.set(scenario.title, [...(titleLocations.get(scenario.title) ?? []), loc]);
+}
 
 for (const rel of files) {
   const scenarios = parseFeature(rel);
@@ -44,8 +49,8 @@ for (const rel of files) {
     if (pyramid.length > 1) errors.push(`${loc} "${s.title}" has ${pyramid.length} pyramid tags (${pyramid.map((t) => "@" + t).join(" ")}); exactly one allowed`);
     if (unknown.length) errors.push(`${loc} "${s.title}" has unknown tag(s): ${unknown.map((t) => "@" + t).join(" ")}`);
 
-    if (seenTitles.has(s.title)) errors.push(`${loc} duplicate scenario title "${s.title}" (also at ${seenTitles.get(s.title)})`);
-    else seenTitles.set(s.title, loc);
+    const duplicateAt = (titleLocations.get(s.title) ?? []).find((other) => other !== loc);
+    if (duplicateAt) errors.push(`${loc} duplicate scenario title "${s.title}" (also at ${duplicateAt})`);
 
     // Phrasing: title + steps until next blank/tag/scenario line.
     const body = [s.title];
@@ -64,7 +69,8 @@ for (const rel of files) {
 }
 
 if (!isHook && errors.length === 0) {
-  process.stdout.write(`[bdd:feature] ${files.length} file(s), ${seenTitles.size} scenario(s), ${warnings.length} warning(s)\n`);
+  const scenarioCount = files.flatMap(parseFeature).length;
+  process.stdout.write(`[bdd:feature] ${files.length} file(s), ${scenarioCount} scenario(s), ${warnings.length} warning(s)\n`);
   for (const w of warnings) process.stdout.write("  - " + w + "\n");
   process.exit(0);
 }

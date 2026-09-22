@@ -2,6 +2,19 @@
   "version": 1,
   "skills": [
     {
+      "name": "domain-mapping",
+      "description": "Maps business domains and suggests service boundaries in any codebase using DDD Strategic Design. Use when the user asks \"what are the domains in this codebase?\", \"where should I draw service boundaries?\", \"identify bounded contexts\", \"classify subdomains\", \"DDD analysis\", or analyzing domain cohesion. Do NOT use for grouping existing components into domains (use domain-identification-grouping) or dependency analysis (use coupling-analysis).",
+      "category": "architecture",
+      "path": "architecture/domain-mapping",
+      "hash": "sha256:1e8077b27be7334457301cd5d131cf49fa0b3dc0e28796d56bcd5c8a7d66ec3c",
+      "files": [
+        "SKILL.md",
+        "references/EXAMPLES.md",
+        "references/QUICK-REFERENCE.md",
+        "references/README.md"
+      ]
+    },
+    {
       "name": "system-design",
       "description": "Design or review a software architecture — requirements, constraints, component boundaries, data flow, failure modes, trade-offs — and produce a decision record with named alternatives. Use when the user asks to \"design the system\", \"architect\", \"how should we structure\", \"review the architecture\", \"write an ADR\", or before implementing a feature that crosses service or data boundaries. Not for single-function implementation details.",
       "category": "architecture",
@@ -13,10 +26,10 @@
     },
     {
       "name": "bdd",
-      "description": "Gated BDD workflow for any new feature, function or business rule — interview → feature file → approval → tests → code → run → refactor. Use whenever the user asks to build, add, change or implement behaviour (even small), or says \"/bdd\". Also use when the user says \"set up BDD\", \"init BDD\" or \"bdd init\" (harness bootstrap lives in references/init.md). Not for bug fixes (use /bdd-regression) or pure refactors with green tests.",
+      "description": "BDD workflow for a new feature, function or business rule — preflight → /bdd-plan (interview, feature file, approval) → /bdd-implement (red tests, code, verify). Use whenever the user says \"/bdd\" or uses terms that indicate BDD (e.g. \"set up BDD\", \"use BDD\"). Not for bug fixes (use /bdd-regression) or pure refactors with green tests.",
       "category": "development",
       "path": "development/bdd",
-      "hash": "sha256:8990d7a8d433323e16b156eb6b702bdd14217fdb69408746de68acc50a551ba4",
+      "hash": "sha256:eb4b8fa336be6c9ab31d14483e2349fe507b2cc3faab850faa06cd6a4edd8ad7",
       "files": [
         "SKILL.md",
         "references/TESTING_PHILOSOPHY.template.md",
@@ -30,9 +43,31 @@
         "scripts/bdd-gate.mjs",
         "scripts/bdd-lib.mjs",
         "scripts/bdd-parity.mjs",
+        "scripts/bdd-preflight.mjs",
         "scripts/check-feature.mjs",
         "scripts/check-test.mjs",
         "scripts/render-philosophy.mjs"
+      ]
+    },
+    {
+      "name": "bdd-implement",
+      "description": "Implementation half of the BDD workflow — Bind tests (red), Implement, Verify — for scenarios the user has already approved. Use when the user says \"/bdd-implement\" or asks to implement approved .feature scenarios. Called by /bdd after Gate 1; not for writing or changing scenarios (use /bdd-plan) and not for bug fixes (use /bdd-regression).",
+      "category": "development",
+      "path": "development/bdd-implement",
+      "hash": "sha256:e199ea7e16091b31adcc987d6c9b59046c51a2f27eb68033ddfd409d06bada30",
+      "files": [
+        "SKILL.md",
+        "references/test-binding.md"
+      ]
+    },
+    {
+      "name": "bdd-plan",
+      "description": "Planning half of the BDD workflow — Discovery (read config, specs, code; interview the user) and Specify (write tagged .feature files, lint them, stop for approval). Use when the user says \"/bdd-plan\" or wants scenarios written before any test or code. Called by /bdd; not for tests or production code (use /bdd-implement) and not for bug fixes (use /bdd-regression).",
+      "category": "development",
+      "path": "development/bdd-plan",
+      "hash": "sha256:eab80e34949a4795b48f819c6bfdd3657eac4b7b00b6d2b28c4f8dcf0095dc12",
+      "files": [
+        "SKILL.md"
       ]
     },
     {
@@ -40,7 +75,7 @@
       "description": "Bug-fix workflow — reproduce with a failing @regression scenario + test at the lowest sufficient level, then fix, then prove the test fails with the fix reverted. Use when the user reports a bug, a wrong result, an error in production, or says \"/bdd-regression\". Not for new behaviour (use /bdd).",
       "category": "development",
       "path": "development/bdd-regression",
-      "hash": "sha256:6f89e19e23afd6f0338ffde7067db2373485e9d6e55f42327aae43ba21570844",
+      "hash": "sha256:32ea7d1ae45c54bdeb653398dbcb40ae02afd738b5121ab82dee53ba43c7edf1",
       "files": [
         "SKILL.md"
       ]
@@ -50,7 +85,17 @@
       "description": "Review a diff, branch, pull request or file for correctness bugs, security issues and needless complexity, and report one severity-tagged finding per line with a concrete fix. Use when the user says \"review\", \"code review\", \"review this PR / diff / file\", or asks whether a change is safe to merge. Not for writing new features or for style-only feedback.",
       "category": "development",
       "path": "development/code-review",
-      "hash": "sha256:68ba5e370bd17727a31aa6787e2c99db69abf64d514f9cdb8e29decf700b0248",
+      "hash": "sha256:616c02dacec56cd47efd1ab362a5300f64ed5703d7982fe993d3ebc5ee79083e",
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "grill-me",
+      "description": "Interview the user relentlessly about a plan, decision, or idea until nothing is left silently assumed. Use when the user wants to stress-test their thinking. Not for questions you can answer yourself from the codebase or docs.",
+      "category": "development",
+      "path": "development/grill-me",
+      "hash": "sha256:6a0b14c76f5097e19ef8dc0f256416b202a2f06a1dca5ceec55b9c8c1ac1dcc9",
       "files": [
         "SKILL.md"
       ]

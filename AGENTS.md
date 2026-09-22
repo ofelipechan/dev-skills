@@ -183,7 +183,7 @@ Guidelines: one job per skill · state when it must *not* trigger · prefer runn
 
 1. Add an entry to `AGENTS` in `packages/cli/src/services/agents.ts` (id, display name, project dir, global dir). Extend the `AgentId` union in `types.ts`.
 2. Add cases to `packages/cli/test/agents.test.ts`.
-3. Add a row to the README **Supported Agents** table and the `--agent` help text is derived automatically.
+3. Add a row to the README **Supported Agents** table; the `--agent` help text is derived automatically.
 
 Nothing in the installer should need to change.
 

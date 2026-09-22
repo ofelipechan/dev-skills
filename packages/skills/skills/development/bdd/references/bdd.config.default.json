@@ -13,7 +13,8 @@
     ".next",
     "coverage",
     ".git",
-    ".claude/worktrees"
+    ".claude/worktrees",
+    ".agents/worktrees"
   ],
   "pyramidTags": [
     "unit",

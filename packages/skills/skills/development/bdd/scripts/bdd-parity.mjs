@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 // Spec <-> test parity report. CLI, CI, and Stop hook.
 //
-//   node .claude/hooks/bdd-parity.mjs            report; exit 1 on gaps
-//   node .claude/hooks/bdd-parity.mjs --json     machine-readable
-//   node .claude/hooks/bdd-parity.mjs --hook     (Stop hook) reads stdin JSON; blocks the stop once with the gap list.
+//   node <agent runtime dir>/bdd-parity.mjs            report; exit 1 on gaps
+//   node <agent runtime dir>/bdd-parity.mjs --json     machine-readable
+//   node <agent runtime dir>/bdd-parity.mjs --hook     (Stop hook) reads stdin JSON; blocks the stop once with the gap list.
 //
 // Gaps:
 //   unbound   tagged scenario (not @unimplemented) with no @scenario binding
 //   orphan    @scenario binding whose title matches no scenario
-//   stale     scenario tagged @unimplemented that IS bound (drop the tag)
+//
+// Informational (never a gap):
+//   inProgress  scenario tagged @unimplemented that IS bound — test exists, production code
+//               not yet green; /bdd drops the tag per scenario as each test goes green
+//   pending     scenario tagged @unimplemented with no binding yet
 import { execFileSync } from "node:child_process";
 import { loadConfig, readStdinJson, collectScenarios, collectBindings } from "./bdd-lib.mjs";
 
@@ -45,7 +49,7 @@ const bound = new Set(bindings.map((b) => b.scenario));
 const titles = new Set(scenarios.map((s) => s.title));
 
 const unbound = scenarios.filter((s) => !s.tags.includes(cfg.unimplementedTag) && !bound.has(s.title));
-const stale = scenarios.filter((s) => s.tags.includes(cfg.unimplementedTag) && bound.has(s.title));
+const inProgress = scenarios.filter((s) => s.tags.includes(cfg.unimplementedTag) && bound.has(s.title));
 const pending = scenarios.filter((s) => s.tags.includes(cfg.unimplementedTag) && !bound.has(s.title));
 const orphan = bindings.filter((b) => !titles.has(b.scenario));
 
@@ -54,14 +58,16 @@ const report = {
   bindings: bindings.length,
   unbound: unbound.map((s) => ({ title: s.title, file: s.file, line: s.line, tags: s.tags })),
   orphan: orphan.map((b) => ({ scenario: b.scenario, file: b.file, line: b.line })),
-  stale: stale.map((s) => ({ title: s.title, file: s.file, line: s.line })),
+  inProgress: inProgress.map((s) => ({ title: s.title, file: s.file, line: s.line })),
   pending: pending.map((s) => ({ title: s.title, file: s.file, line: s.line })),
 };
-const hasGaps = unbound.length + orphan.length + stale.length > 0;
+const hasGaps = unbound.length + orphan.length > 0;
 
 function text() {
   const out = [];
-  out.push(`[bdd:parity] ${report.scenarios} scenario(s), ${report.bindings} binding(s), ${pending.length} @${cfg.unimplementedTag}`);
+  out.push(
+    `[bdd:parity] ${report.scenarios} scenario(s), ${report.bindings} binding(s), ${pending.length + inProgress.length} @${cfg.unimplementedTag} (${inProgress.length} bound, in progress)`,
+  );
   if (unbound.length) {
     out.push(`\nUNBOUND (${unbound.length}) - tagged scenarios without a test:`);
     for (const s of unbound) out.push(`  ${s.file}:${s.line}  [${s.tags.map((t) => "@" + t).join(" ")}] ${s.title}`);
@@ -70,9 +76,9 @@ function text() {
     out.push(`\nORPHAN (${orphan.length}) - @scenario bindings that match no scenario:`);
     for (const b of orphan) out.push(`  ${b.file}:${b.line}  "${b.scenario}"`);
   }
-  if (stale.length) {
-    out.push(`\nSTALE (${stale.length}) - @${cfg.unimplementedTag} scenarios that are already bound (drop the tag):`);
-    for (const s of stale) out.push(`  ${s.file}:${s.line}  ${s.title}`);
+  if (inProgress.length) {
+    out.push(`\nIN PROGRESS (${inProgress.length}) - bound but still @${cfg.unimplementedTag} (drop the tag once green):`);
+    for (const s of inProgress) out.push(`  ${s.file}:${s.line}  ${s.title}`);
   }
   if (!hasGaps) out.push("parity ok");
   return out.join("\n") + "\n";
@@ -88,8 +94,7 @@ if (isStopHook) {
     const inScope = (f) => changed.has(f);
     const scoped =
       unbound.filter((s) => inScope(s.file)).length +
-      orphan.filter((b) => inScope(b.file)).length +
-      stale.filter((s) => inScope(s.file)).length;
+      orphan.filter((b) => inScope(b.file)).length;
     if (scoped === 0) process.exit(0);
   }
   const reason =

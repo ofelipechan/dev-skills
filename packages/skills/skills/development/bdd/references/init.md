@@ -1,10 +1,12 @@
 # BDD harness initialization
 
-Reference for `/bdd` preflight. Use when `specs/` or `docs/TESTING_PHILOSOPHY.md` is missing in the project, when the user says "set up BDD", "init BDD", "bdd init", or when `/bdd` finds the harness incomplete. Bootstraps: `specs/`, `docs/TESTING_PHILOSOPHY.md` tailored to the project's stack and to the test levels in scope, offers missing test levels (e.g. E2E for a frontend) and seeds their feature files, sets up `.claude/bdd.config.json`, the parity npm script and the hook wiring.
+Reference for `/bdd` preflight. Use when `bdd-preflight.mjs` reports the current agent as `incomplete` or `invalid`, or when the user asks to set up BDD. Bootstraps `specs/`, a stack-specific `docs/TESTING_PHILOSOPHY.md`, agent-specific configs, the parity npm script, and supported hook wiring.
 
 Idempotent. Re-running only fills what is missing and reports what already exists. Never overwrite a file the project already has without asking.
 
 Paths below are relative to the `bdd` skill's directory (wherever it is installed: `.claude/skills/bdd`, `.agents/skills/bdd`, or the global equivalent). `<this skill dir>` = that directory. `references/` (this file's directory) and `scripts/` sit directly under it.
+
+Determine the target agents before proposing changes. Always include the invoking agent; also include an agent with a project installation at `.claude/skills/bdd` or `.agents/skills/bdd`, and honor any agents the user names explicitly. Claude's project config is `.claude/bdd.config.json`; Codex's is `.agents/bdd.config.json`.
 
 Announce `[bdd init]` at the start of each message while in this flow.
 
@@ -44,7 +46,7 @@ Outcomes:
 
 - **Accepted** → the level is in scope. Keep its trait/tag. Right after step 2, write the first `.feature` files for it (see 2b). **No test code** — tests are written later by `/bdd` once each scenario is approved.
 - **Declined** → the level is out of scope for now:
-  - `e2e` declined → render the philosophy **without** the `e2e` trait (no E2E row, no `@e2e` tag, no E2E environment section) **and** remove `"e2e"` from `pyramidTags` in `.claude/bdd.config.json` so `check-feature.mjs` rejects an `@e2e` tag if one appears. Note in the report how to enable later (add the trait, re-render, restore the tag).
+  - `e2e` declined → render the philosophy **without** the `e2e` trait (no E2E row, no `@e2e` tag, no E2E environment section) **and** remove `"e2e"` from `pyramidTags` in every target agent config so `check-feature.mjs` rejects an `@e2e` tag if one appears. Note in the report how to enable later (add the trait, re-render, restore the tag).
   - `integration` declined → keep the doc as is (integration is the default home for edge cases and cannot be removed without breaking the decision tree); record the decision in the report and set no expectation of an integration suite.
 - **Already present** levels are never asked about.
 
@@ -72,7 +74,7 @@ Summary + questions in this shape:
 - present: e2e (apps/web/e2e/**/*.spec.ts, playwright)
 - missing but applicable: integration
 
-**Will be created**: specs/, docs/TESTING_PHILOSOPHY.md, .claude/bdd.config.json, .claude/hooks/*.mjs, .claude/rules/bdd-*.md, "bdd:check" npm script.
+**Will be created**: specs/, docs/TESTING_PHILOSOPHY.md, <one bdd.config.json per target agent>, <agent runtime scripts>, Claude rules/hooks when Claude is targeted, "bdd:check" npm script.
 **Already exists (untouched)**: <list or "nothing">
 ```
 ```
@@ -96,7 +98,7 @@ Rules for this message:
 - **Full paths, one per line** for test globs. Do not inline a comma-separated list of globs in a heading.
 - **Say what will be written** before asking. The user must know the files this will create in their repo.
 - Keep the whole message under ~40 lines. Drop the traits table rows that were not detected; do not explain traits that do not apply.
-- **This message is the end of your turn.** Nothing follows it: no tool calls, no file creation, no rendering, no `[bdd 1/5 spec]` — not even when the answer looks obvious or every level is already present. The next thing that happens is the user's reply.
+- **This message is the end of your turn.** Nothing follows it: no tool calls, no file creation, no rendering, no `[bdd 1/5 discovery]` — not even when the answer looks obvious or every level is already present. The next thing that happens is the user's reply.
 
 **Gate 0**: explicit reply — the tool's answers, or "confirm" / "ok" / "go" / answers to the numbered items in chat. Silence does not. If init was entered from `/bdd` preflight, the `/bdd` run resumes only after this gate **and** after step 4's report — never in the same message as the question.
 
@@ -111,13 +113,13 @@ Check each item; create only if absent.
 specs/
   README.md
 ```
-Write `specs/README.md` from [references/specs-README.md](references/specs-README.md). Path layout is fixed: `specs/<context>/<behaviour>.feature`. If the user wants a different specs directory, set `specsDir` in the config **and** update the `paths:` glob in `.claude/rules/bdd-spec.md`.
+Write `specs/README.md` from [specs-README.md](specs-README.md). Path layout is fixed: `specs/<context>/<behaviour>.feature`. If the user wants a different specs directory, set `specsDir` in every agent config and update the `paths:` glob in `.claude/rules/bdd-spec.md` when Claude is targeted.
 
 ### `docs/TESTING_PHILOSOPHY.md`
 ```bash
 node <this skill dir>/scripts/render-philosophy.mjs --traits <comma,list> --lang <Language> --out docs/TESTING_PHILOSOPHY.md
 ```
-Omit `--traits`/`--lang` to use the detected values. The `e2e` trait means **E2E is in scope** (present or accepted in 1b) — pass the trait list explicitly whenever a level was declined. The script renders [references/TESTING_PHILOSOPHY.template.md](references/TESTING_PHILOSOPHY.template.md), dropping sections for absent traits. Afterwards read the output once and fix wording that only makes sense with a dropped trait (rare — the template is written to degrade cleanly).
+Omit `--traits`/`--lang` to use the detected values. The `e2e` trait means **E2E is in scope** (present or accepted in 1b) — pass the trait list explicitly whenever a level was declined. The script renders [TESTING_PHILOSOPHY.template.md](TESTING_PHILOSOPHY.template.md), dropping sections for absent traits. Afterwards read the output once and fix wording that only makes sense with a dropped trait (rare — the template is written to degrade cleanly).
 
 If the file already exists: diff it against a fresh render (`--out` to a scratch path) and show the user the delta, summarised as "sections added / sections removed / lines changed" plus the diff itself. Then ask, as its own message:
 
@@ -130,33 +132,54 @@ Default on an unclear answer: keep. This question ends the turn.
 Only when a suggested level was accepted in 1b. Goal: give the level a concrete backlog so the next `/bdd` run has something to bind.
 
 1. Identify candidates from the code you can see (routes, pages, main user flows). `e2e` → the 5–10 **stable core happy paths** only (sign-in, the main create/read flow, the main submit flow). `integration` → boundary contracts that exist today (each route group, each repository, each page that renders data).
-2. Write one `.feature` per context under `specs/<context>/`, every scenario tagged `@<level> @unimplemented`, phrased per § 7 (user language, no transport). Lint each file: `node .claude/hooks/check-feature.mjs <file>`.
+2. Write one `.feature` per context under `specs/<context>/`, every scenario tagged `@<level> @unimplemented`, phrased per § 7 (user language, no transport). Lint each file with `<this skill dir>/scripts/check-feature.mjs`.
 3. Show the files and **stop** for approval — same gate as `/bdd` phase 1. Per file: the path, then one line per scenario (`- <title> — @<level> @unimplemented`). End with exactly:
 
    > These are seed scenarios only — no tests, no runner, no code yet. Approve them to add to the backlog, remove the ones you do not want, or tell me what to change.
 
    Do not write tests, seeds, runner config or install a runner here; that happens in `/bdd` when a scenario is approved, and any new dependency (e.g. a browser runner) needs its own approval then.
 
-`@unimplemented` keeps parity green until each scenario is picked up; `/bdd` removes the tag when it binds the test.
+`@unimplemented` keeps parity green until each scenario is picked up; `/bdd` removes the tag once the scenario's bound test is green.
 
-### `.claude/bdd.config.json`
-Copy [references/bdd.config.default.json](references/bdd.config.default.json), then adjust `testGlobs`, `ignoreDirs` and `specsDir` to the project. Remove `"e2e"` from `pyramidTags` when E2E was declined in 1b. Non-JS runners: also adjust `phrasingBanlist` (the binding/naming hooks parse `it()`/`test()` + JSDoc; for other runners the parity script still works on `@scenario "<title>"` in any comment).
+### Agent configs
+
+For each target, copy [bdd.config.default.json](bdd.config.default.json), then adjust `testGlobs`, `ignoreDirs`, `specsDir`, and `pyramidTags` for that agent:
+
+- Claude Code → `.claude/bdd.config.json`
+- Codex → `.agents/bdd.config.json`
+
+Configs are independent and may differ. Preserve an existing agent's values unless the user approves changing that agent. Non-JS runners also need an adjusted `phrasingBanlist`.
 
 ### Parity script in `package.json`
-Add (if `package.json` exists and the key is absent):
+For one target, add its parity command if `package.json` exists and the key is absent:
 ```json
-"bdd:check": "node .claude/hooks/bdd-parity.mjs"
+"bdd:check": "node <target agent runtime dir>/bdd-parity.mjs"
 ```
-Mention it as the CI gate.
 
-### Scripts in `.claude/hooks/`
-Copy [scripts/](scripts/) `{bdd-lib,bdd-gate,check-feature,check-test,bdd-parity}.mjs` → `.claude/hooks/` (create the folder). They are zero-dependency Node scripts used both as Claude Code hooks and as plain CLI checks (`/bdd`, `/bdd-regression`, CI). `render-philosophy.mjs` stays in this skill (it reads `references/` next to itself).
+For both targets, add agent-specific commands and make the aggregate run both:
+
+```json
+"bdd:check:claude": "node .claude/hooks/bdd-parity.mjs",
+"bdd:check:codex": "node .agents/hooks/bdd-parity.mjs",
+"bdd:check": "npm run bdd:check:claude && npm run bdd:check:codex"
+```
+
+Mention `bdd:check` as the CI gate.
+
+### Runtime scripts
+
+Copy `{bdd-lib,bdd-gate,bdd-preflight,check-feature,check-test,bdd-parity}.mjs` from `<this skill dir>/scripts/` into each target runtime directory:
+
+- Claude Code → `.claude/hooks/`
+- Codex → `.agents/hooks/`
+
+Each runtime directory reads only its agent's config. `render-philosophy.mjs` stays in the installed skill because it reads the adjacent template.
 
 ### Hooks in `.claude/settings.json` (Claude Code only)
-Merge the entries from [references/hooks.settings.json](references/hooks.settings.json) into the project's `settings.json` under `hooks`. Do not duplicate an entry that already runs the same script. Do not drop existing hooks. Codex has no hooks: the scripts are run manually in the `/bdd` phases.
+Merge the entries from [hooks.settings.json](hooks.settings.json) into the project's `settings.json` under `hooks`. Do not duplicate an entry that already runs the same script. Do not drop existing hooks. Codex runs the scripts explicitly from `.agents/hooks/`.
 
 ### Rules in `.claude/rules/` (Claude Code only)
-Copy [references/rules/](references/rules/) `bdd-gate.md`, `bdd-spec.md`, `bdd-test.md` → `.claude/rules/`. `bdd-spec.md` and `bdd-test.md` are path-scoped and load only when matching files are edited.
+Copy [rules/](rules/) `bdd-gate.md`, `bdd-spec.md`, `bdd-test.md` → `.claude/rules/`. `bdd-spec.md` and `bdd-test.md` are path-scoped and load only when matching files are edited.
 
 ### Gate rule in project instructions
 Make sure `CLAUDE.md` / `AGENTS.md` does **not** `@`-include the full philosophy (it costs ~4k tokens per session; the rules under `.claude/rules/bdd-*.md` load it progressively). A single line is enough:
@@ -167,14 +190,13 @@ Make sure `CLAUDE.md` / `AGENTS.md` does **not** `@`-include the full philosophy
 
 ## 3. Verify
 
-
 ```bash
 # checks every scenario in specs/ has exactly one test bound to it, and every bound test has a scenario
-node .claude/hooks/bdd-parity.mjs
+node <each target agent runtime dir>/bdd-parity.mjs
 # lints all .feature files: one pyramid tag per scenario, no unknown tags, unique titles, user-language phrasing
-node .claude/hooks/check-feature.mjs
+node <each target agent runtime dir>/check-feature.mjs
 # lints all test files: no "should" titles, no skipped bindings, @scenario titles match specs exactly, no double binding
-node .claude/hooks/check-test.mjs
+node <each target agent runtime dir>/check-test.mjs
 ```
 
 All three must run without a crash (a crash means the config or the copied scripts are wrong; findings are not a crash). Gaps reported by parity on an existing project are the backlog: list them to the user; do not fix them as part of init.
@@ -188,11 +210,13 @@ Compact list: created / already existed / skipped (with reason), plus the level 
 ```
 specs/README.md                          feature-file layout + commands
 docs/TESTING_PHILOSOPHY.md               rendered for this stack
-.claude/bdd.config.json                  scripts config
-.claude/hooks/{bdd-lib,bdd-gate,check-feature,check-test,bdd-parity}.mjs
+.claude/bdd.config.json                  Claude config, when targeted
+.agents/bdd.config.json                  Codex config, when targeted
+.claude/hooks/{bdd-lib,bdd-gate,bdd-preflight,check-feature,check-test,bdd-parity}.mjs
+.agents/hooks/{bdd-lib,bdd-gate,bdd-preflight,check-feature,check-test,bdd-parity}.mjs
 .claude/rules/{bdd-gate,bdd-spec,bdd-test}.md   (Claude Code)
 .claude/settings.json                    hooks block merged (Claude Code)
 package.json                             "bdd:check" script
 ```
 
-The skills themselves (`bdd`, `bdd-regression`) are installed by `dev-skills`; install both together.
+The skills themselves (`bdd`, `bdd-plan`, `bdd-implement`, `bdd-regression`) are installed by `dev-skills`; install them together.

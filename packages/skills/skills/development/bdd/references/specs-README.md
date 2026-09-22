@@ -16,11 +16,15 @@ Workflow, test levels, tags, and the `@scenario` binding syntax live in `docs/TE
 
 ```bash
 # spec <-> test parity (also the CI gate)
-node .claude/hooks/bdd-parity.mjs
+npm run bdd:check
 
-# lint all feature files (tags, phrasing)
+# Claude Code: lint all feature and test files
 node .claude/hooks/check-feature.mjs
-
-# lint all test files (bindings, naming)
 node .claude/hooks/check-test.mjs
+
+# Codex: lint all feature and test files
+node .agents/hooks/check-feature.mjs
+node .agents/hooks/check-test.mjs
 ```
+
+Use the commands for an agent initialized in this project.
