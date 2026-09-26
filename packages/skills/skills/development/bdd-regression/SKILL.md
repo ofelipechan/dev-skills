@@ -48,8 +48,7 @@ Report both outputs (titles + result lines are enough). If the test cannot fail 
 ## 6. Run + report
 
 ```bash
-node <bdd skill dir>/scripts/bdd-parity.mjs
-<project tests for the touched scope> ; <lint> ; <typecheck>
+node <bdd skill dir>/scripts/bdd-verify.mjs
 ```
 
 ```

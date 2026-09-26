@@ -11,7 +11,8 @@
 //
 // Informational (never a gap):
 //   inProgress  scenario tagged @unimplemented that IS bound — test exists, production code
-//               not yet green; /bdd drops the tag per scenario as each test goes green
+//               not proven green yet. Never a gap and never a reason to drop the tag: the tag stays
+//               until the bound test has actually run green (a test that could not run keeps it)
 //   pending     scenario tagged @unimplemented with no binding yet
 import { execFileSync } from "node:child_process";
 import { loadConfig, readStdinJson, collectScenarios, collectBindings } from "./bdd-lib.mjs";
@@ -63,7 +64,7 @@ const report = {
 };
 const hasGaps = unbound.length + orphan.length > 0;
 
-function text() {
+function text({ gapsOnly = false } = {}) {
   const out = [];
   out.push(
     `[bdd:parity] ${report.scenarios} scenario(s), ${report.bindings} binding(s), ${pending.length + inProgress.length} @${cfg.unimplementedTag} (${inProgress.length} bound, in progress)`,
@@ -76,8 +77,8 @@ function text() {
     out.push(`\nORPHAN (${orphan.length}) - @scenario bindings that match no scenario:`);
     for (const b of orphan) out.push(`  ${b.file}:${b.line}  "${b.scenario}"`);
   }
-  if (inProgress.length) {
-    out.push(`\nIN PROGRESS (${inProgress.length}) - bound but still @${cfg.unimplementedTag} (drop the tag once green):`);
+  if (inProgress.length && !gapsOnly) {
+    out.push(`\nIN PROGRESS (${inProgress.length}) - bound, still @${cfg.unimplementedTag} (informational; the tag stays until the test has run green):`);
     for (const s of inProgress) out.push(`  ${s.file}:${s.line}  ${s.title}`);
   }
   if (!hasGaps) out.push("parity ok");
@@ -100,8 +101,10 @@ if (isStopHook) {
   const reason =
     "BDD parity gap in files you changed. Every tagged scenario needs a bound test (or the @" +
     cfg.unimplementedTag +
-    " tag), and every binding needs a scenario. Fix or tag before finishing:\n" +
-    text();
+    " tag), and every binding needs a scenario. Fix or tag before finishing. " +
+    "Scenarios tagged @" + cfg.unimplementedTag + " are never a gap: do not remove that tag to satisfy this check; " +
+    "it comes off only after the bound test has actually run green.\n" +
+    text({ gapsOnly: true });
   process.stdout.write(JSON.stringify({ decision: "block", reason }) + "\n");
   process.exit(0);
 }

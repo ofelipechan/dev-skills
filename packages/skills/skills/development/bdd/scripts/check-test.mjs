@@ -68,7 +68,7 @@ for (const rel of files) {
     }
   }
   // A bound scenario may still carry @unimplemented: the test exists but production code
-  // is not green yet. /bdd drops the tag per scenario during Implement, so no warning here.
+  // is not proven green yet. The tag stays until the test has run green, so no warning here.
 }
 
 if (!isHook && errors.length === 0) {

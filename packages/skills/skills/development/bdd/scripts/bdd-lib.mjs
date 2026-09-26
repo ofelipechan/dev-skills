@@ -18,6 +18,7 @@ const DEFAULTS = {
   modifierTags: ["regression", "unimplemented"],
   unimplementedTag: "unimplemented",
   phrasingBanlist: [],
+  commands: {},
 };
 
 export function loadConfig() {
@@ -33,12 +34,32 @@ export function loadConfig() {
   return { ...DEFAULTS, ...raw };
 }
 
+// Cached so bdd-hook.mjs can read stdin once and hand off to the check scripts in-process.
 export function readStdinJson() {
+  if (globalThis.__bddStdin !== undefined) return globalThis.__bddStdin;
   try {
     const raw = fs.readFileSync(0, "utf8");
-    return raw.trim() ? JSON.parse(raw) : {};
+    globalThis.__bddStdin = raw.trim() ? JSON.parse(raw) : {};
   } catch {
-    return {};
+    globalThis.__bddStdin = {};
+  }
+  return globalThis.__bddStdin;
+}
+
+// Run state written by bdd-state.mjs: { phase: "plan" | "implement", track, features[], scenarios[], updatedAt }.
+// Older than STATE_TTL_MS counts as abandoned and is ignored.
+const STATE_TTL_MS = 12 * 60 * 60 * 1000;
+export function statePath() {
+  const agentDir = SCRIPT_PATH.includes("/.agents/") ? ".agents" : ".claude";
+  return path.join(ROOT, agentDir, "bdd-run.json");
+}
+export function readState() {
+  try {
+    const state = JSON.parse(fs.readFileSync(statePath(), "utf8"));
+    if (Date.now() - Date.parse(state.updatedAt) > STATE_TTL_MS) return null;
+    return state;
+  } catch {
+    return null;
   }
 }
 

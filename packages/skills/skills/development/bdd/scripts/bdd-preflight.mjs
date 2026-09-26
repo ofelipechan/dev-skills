@@ -49,6 +49,10 @@ function configProblems(value) {
   }
   if (typeof value.unimplementedTag !== "string" || value.unimplementedTag.length === 0) out.push("unimplementedTag must be a non-empty string");
   if (!Array.isArray(value.phrasingBanlist)) out.push("phrasingBanlist must be an array");
+  if (value.commands !== undefined) {
+    if (!value.commands || typeof value.commands !== "object" || Array.isArray(value.commands)) out.push("commands must be an object");
+    else for (const [key, cmd] of Object.entries(value.commands)) if (typeof cmd !== "string") out.push(`commands.${key} must be a string`);
+  }
   return out;
 }
 

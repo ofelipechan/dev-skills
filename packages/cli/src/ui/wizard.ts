@@ -215,13 +215,19 @@ async function runList(ctx: InstallContext): Promise<void> {
 
 export async function runWizard(): Promise<void> {
   p.intro("dev-skills");
-  const ctx = createContext();
   try {
+    const ctx = createContext();
     const action = await askAction();
     if (action === "install") {
       const s = p.spinner();
       s.start("Fetching registry");
-      const registry = await ctx.source.getRegistry();
+      let registry: Registry;
+      try {
+        registry = await ctx.source.getRegistry();
+      } catch (err) {
+        s.error("Could not fetch registry");
+        throw err;
+      }
       s.stop(`${registry.skills.length} skill(s) available`);
       await runInstall(ctx, registry);
     } else if (action === "update") await runUpdate(ctx);

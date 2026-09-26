@@ -1,71 +1,74 @@
 ---
 name: bdd-plan
-description: Planning half of the BDD workflow — Discovery (read config, specs, code; interview the user) and Specify (write tagged .feature files, lint them, stop for approval). Use when the user says "/bdd-plan" or wants scenarios written before any test or code. Called by /bdd; not for tests or production code (use /bdd-implement) and not for bug fixes (use /bdd-regression).
+description: Planning half of the BDD workflow — gather context, pick a track (S/M/L), draft tagged .feature scenarios with a plan, and stop at one approval gate that also resolves open decisions. Use when the user says "/bdd-plan" or wants scenarios written before any test or code. Called by /bdd; not for tests or production code (use /bdd-implement) and not for bug fixes (use /bdd-regression).
 license: CC-BY-4.0
 metadata:
   author: Felipe Chan - https://github.com/ofelipechan
-  version: 1.0.0
+  version: 2.0.0
 ---
 
-# BDD plan — Discovery → Specify
+# BDD plan — Context → Draft → Gate 1
 
-Turn one feature request into approved, tagged Gherkin scenarios. This skill ends at the approval request; it never writes tests or production code. `/bdd` runs it as phases 1–2 and continues with `/bdd-implement` once the user approves.
+Turn one feature request into approved, tagged Gherkin scenarios plus an implementation plan, with as few human stops as accuracy allows. Only `specs/**/*.feature` may change here. The `/bdd` guardrails apply.
 
-## Guardrails
+Standalone: run `node <bdd dir>/scripts/bdd-context.mjs --agent <agent> <keywords>` first; if the harness is not `complete`, tell the user to run `/bdd`.
 
-- Test and production files remain untouched. Only `specs/**/*.feature` may change.
-- Every new scenario starts `@unimplemented`; existing scenarios keep their current tags.
-- Scenario titles stay unique across `specs/` and are the contract later phases bind to. Rename a title only together with its binding.
-- Leave git state untouched unless the user explicitly requests a git operation.
-- Name the active phase only when entering it, requesting approval, or reporting a blocker. Summarize command results instead of dumping raw output.
+## 1. Context
 
-## Prerequisites
+Use the `bdd-context` output: `matches` names the feature files to read; `config.commands` and `testGlobs` locate tests. Then read only what the plan needs, in parallel: the matching feature files, the production code the feature touches, and one neighboring test file per level you expect to use. Production code beats documentation. Do not read `docs/TESTING_PHILOSOPHY.md` — on Claude Code its extracts load automatically when you edit specs or tests; on Codex read `<bdd dir>/references/rules/bdd-spec.md` before drafting.
 
-The BDD harness must exist: the current agent's `bdd.config.json` (`.claude/bdd.config.json` for Claude Code, `.agents/bdd.config.json` for Codex), `specs/`, and `docs/TESTING_PHILOSOPHY.md`. `/bdd` verifies this with its preflight before calling this skill. When running standalone and something is missing, stop and tell the user to run `/bdd` (its preflight bootstraps the harness).
+Facts are your job; decisions are the user's. An **open decision** is one that changes what a scenario's `Then` asserts (limits, error outcomes, authorization, visible results) and that code, specs, and the request do not settle. Anything that does not change observable behavior is yours to decide.
 
-`<bdd skill dir>` below is the installed `bdd` skill folder (`.claude/skills/bdd`, `.agents/skills/bdd`, or the global equivalent). Its `scripts/` are also copied to `.claude/hooks/` / `.agents/hooks/` at init; either location works.
+## 2. Track
 
-**Test levels are per project, not fixed.** Use `pyramidTags` from the current agent's config. Tag scenarios only with configured levels. Adding a missing level is a separate harness change requiring user approval.
+| Track | When (all must hold for S; any triggers L) | Flow |
+| --- | --- | --- |
+| **S** | ≤3 scenarios, one context, existing test file(s), no new dependency/level/infra, 0 open decisions | draft → Gate 1 |
+| **M** | default: ≤3 open decisions | draft → Gate 1 with the decisions inside it |
+| **L** | >3 open decisions, several contexts, a new level/dependency/infra, >10 scenarios, or a vague request | interview → draft → Gate 1 |
 
-## 1/2 — Discovery
+The user can force a track ("full" → L). State the track in the Gate 1 report.
 
-1. Read the current agent's `bdd.config.json`; `testGlobs` identifies the code and test roots.
+**L interview:** use the `grill-me` questioning style (frontier rounds, multiple choice, one recommendation, structured question tool) — at most 2 rounds of ≤4 questions — then go straight to drafting. Skip grill-me's Finish playback: the Gate 1 report is the playback.
 
-2. Under `specs/` there might be subfolders, each representing a context (a domain, service, cluster). Each may have multiple `.feature` files written in Gherkin syntax describing user-facing behaviour. Read the relevant feature files to gather context about current business logic.
+## 3. Draft
 
-3. Explore the repository to understand the current state of the codebase. Locate any existing code that is relevant to what you are planning to build, or missing pieces you will need to add. The production code itself is more relevant than any documentation you may read, because it represents the current state of the application, while documentation may be outdated.
+1. Write or update the `.feature` files. Every scenario gets exactly one configured pyramid tag (lowest level that proves it), modifiers beside it, and a title unique across `specs/`. Every **new** scenario also gets `@unimplemented`; existing scenarios keep their tags.
+2. For each open decision, draft the scenario with the **recommended** option and record the alternatives.
+3. Lint: on Claude Code the `check-feature` hook reports on every edit — fix its findings; elsewhere run `node <bdd dir>/scripts/check-feature.mjs <files>`.
+4. Before the gate, check the draft against the usual gaps — empty/invalid input, limits, unauthorized actor, not-found, duplicates, failure of an external dependency — and either cover each or list it as deliberately not covered.
 
-4. Interview the user until every behavior decision is explicit. Run the `grill-me` skill (`/grill-me`; if not installed: `npx @ofelipechan/dev-skills install grill-me`). It owns the interview: design tree, frontier rounds, multiple-choice questions with one recommendation, structured question tool when available. Scale it to the request: a small unambiguous change may need no questions; a vague change needs the full interview. Typical decisions here: edge cases, error outcomes, limits, authorization, visible results. Environmental facts come from step 3 — the user only answers decisions.
+## 4. Gate 1 — one stop
 
-Discovery is complete when the frontier is empty and the user confirms the shared understanding and is good to proceed.
+Report, then ask. This ends the turn.
 
-## 2/2 — Specify
+```text
+[bdd-plan] ready for review — track M
+spec:  specs/<context>/<file>.feature  (+N new, M changed)
+  - <title>  @unit @unimplemented
+  - <title>  @integration @unimplemented
+  - <title>  @e2e  (existing, updated)
+assumed (recommended default — say if wrong):
+  - <decision the draft took, one line each>
+not covered (deliberate): <gap>, <gap>
+plan:
+  - <test file> ← <scenario titles or count> (@level)
+  - code: <production files>
+lint: <check-feature summary>
+```
 
-Context: `docs/TESTING_PHILOSOPHY.md` explains how to write feature files and tests.
+Then ask, in one structured-question call when available (Claude Code `AskUserQuestion`, Codex `request_user_input`), otherwise as numbered text:
 
-1. Write or update the `.feature` files from the confirmed design tree. Give every scenario exactly one configured pyramid tag, place modifiers beside it, and keep titles unique across `specs/`. Tag every **new** scenario `@unimplemented` as well; it tracks which scenarios still lack green production code. Existing scenarios keep their current tags.
-2. Run `node <bdd skill dir>/scripts/check-feature.mjs <file>` for every changed feature file. Fix syntax, tag, phrasing, and duplicate-title findings; return behavior questions to Discovery.
-3. Report every added or modified file, scenario title, and pyramid tag. Show the relevant diff and validator result, then stop:
+- one question per open decision (M: ≤3). Recommended option first with `(Recommended)`; **every option states its effect on a scenario** ("→ scenario X asserts …").
+- a final question: **"Approve the scenarios?"** — `Approve with these answers (Recommended)` · `Show me the revised scenarios first` · `I'll comment`.
 
-   ```text
-   [bdd-plan] ready for review
-   added:     specs/<context>/<file>.feature
-   modified:  specs/<context>/<other>.feature
-   scenarios:
-     - <title>  @unit @unimplemented
-     - <title>  @integration @unimplemented
-     - <title>  @e2e  (existing, updated)
-   ```
+S track asks only the approval question.
 
-   Ask: "Approve these scenarios to continue to tests, or tell me what to change."
-
-**Gate 1**: explicit approval in chat. "ok", "approved", and "go" count. A question or new requirement returns to Discovery or Specify. This question ends the turn; nothing follows it.
+**Gate 1 is passed when:**
+- the user picks *Approve with these answers*, or replies "ok" / "approved" / "go": apply any non-recommended answers to the scenarios exactly as their option described, re-lint, record approval with `node <bdd dir>/scripts/bdd-state.mjs implement --track <S|M|L> --feature <path>… --scenario "<title>"…`, and hand off;
+- *Show me the revised scenarios first*: apply the answers, show the diff, ask the approval question again;
+- a new requirement or a comment: return to Context or Draft.
 
 ## Handoff
 
-After approval, the output of this skill is:
-
-- the approved feature-file paths;
-- the exact approved scenario titles.
-
-`/bdd` passes these to `/bdd-implement`. Standalone, tell the user: "Next: `/bdd-implement` with these scenarios."
+Output: the approved feature-file paths, exact scenario titles (after applied answers), the track, and the plan block. `/bdd` passes these to `/bdd-implement`. Standalone: "Next: `/bdd-implement` with these scenarios."

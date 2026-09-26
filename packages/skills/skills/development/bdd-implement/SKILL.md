@@ -4,105 +4,58 @@ description: Implementation half of the BDD workflow — Bind tests (red), Imple
 license: CC-BY-4.0
 metadata:
   author: Felipe Chan - https://github.com/ofelipechan
-  version: 1.0.0
+  version: 2.0.0
 ---
 
-# BDD implement — Bind tests → Implement → Verify
+# BDD implement — Red → Green → Verify
 
-Take approved scenarios to green, verified code through a red test first. `/bdd` runs this as phases 3–5 after `/bdd-plan`'s Gate 1. Make progress visible through artifacts and gate evidence, not repeated phase narration. Name the active phase only when entering it or reporting a blocker. Keep evidence concise; summarize command results instead of dumping raw output.
+Take approved scenarios to green, verified code through a red test first. The `/bdd` guardrails apply, plus:
+
+- Phase 1 changes tests and scenario bindings only; phase 2 owns production code.
+- Keep own code real; inject fakes only at external seams.
+- Never weaken, skip, or delete a test to get green.
 
 ## Inputs
 
-- the approved feature-file paths;
-- the exact approved scenario titles.
+The approved feature-file paths, exact scenario titles, track (S/M/L), and plan from the Gate 1 report. Commands come from `commands` in the current agent's `bdd.config.json` (`bdd-context.mjs` prints them).
 
-Standalone, without explicit approval of these scenarios in this conversation: list the scenarios you found (with tags) and ask for approval before touching any file. That question ends the turn.
+Standalone, without approval of these scenarios in this conversation: list the scenarios found (with tags) and ask for approval before touching any file. That question ends the turn. On approval, record it with `bdd-state.mjs implement --feature … --scenario …` (the gate hook denies test and production edits while a run is in the plan phase).
 
-## Guardrails
+## 1/3 — Red
 
-- Phase 1 changes tests and scenario bindings only; phase 2 owns production code.
-- Each implemented scenario has exactly one test binding.
-- Scenario titles stay stable; rename a title and its binding together.
-- Keep own code real and inject fakes only at external seams.
-- `@unimplemented` comes off one scenario at a time, only when its bound test is green. A scenario deferred past this run keeps the tag.
-- Never weaken, skip, or delete a test to get green.
-- Leave git state untouched unless the user explicitly requests a git operation.
+Follow [references/test-binding.md](references/test-binding.md).
 
-`<bdd skill dir>` below is the installed `bdd` skill folder (`.claude/skills/bdd`, `.agents/skills/bdd`, or the global equivalent). Its `scripts/` are also copied to `.claude/hooks/` / `.agents/hooks/` at init; either location works. Read the current agent's `bdd.config.json` (`.claude/bdd.config.json` for Claude Code, `.agents/bdd.config.json` for Codex); `pyramidTags` lists the configured test levels and `testGlobs` the test roots. Run commands only for configured levels.
+- **S / M:** this session binds the tests — it already holds the context. Do not delegate: a single sequential subagent only adds a cold start.
+- **L with ≥2 independent test files:** when subagents are available, spawn one per test file **in parallel**. Give each the feature paths, its scenario titles, its target test file, the plan block, the matching `commands` entry, and the path to `test-binding.md`. Wait for every `RED` / `BLOCKED` report.
 
-## 1/3 — Bind tests (Red)
+**Gate 2:** every approved scenario is bound and lint is clean. Do not run the tests yet — red is assumed from the missing behavior, not verified. Scenarios keep `@unimplemented`.
 
-Either this session or a subagent (if available) will execute this phase.
+## 2/3 — Green
 
-### Choose the owner
+1. Implement only what the approved scenarios require, respecting the project's architecture.
+2. After each unit of work, run the focused command for the touched level(s) and fix failures caused by the change. This is the first run of the bound tests — confirm they now pass, not merely that they no longer fail for the missing-behavior reason.
+3. After each green run, untag every scenario whose bound test **ran and passed** in that run in one call: `node <bdd dir>/scripts/bdd-untag.mjs "<title>" …`. It refuses unbound or unknown titles. Never untag ahead of a green test, and never untag a scenario whose test did not run (skipped level, a command you chose not to run, blocked environment) — no hook or check overrides this; if the run stops midway, the remaining tags show what is undone.
+4. After two failed attempts on the same test, stop and report the diagnosis and attempts; leave `@unimplemented` on every scenario that is not green.
 
-Use the approved scenarios and known repository context to estimate the test impact (low or broad).
-
-The main agent session owns this phase only when the impact is low, meaning all of the following are true:
-- changes are limited to one existing test file;
-- the correct test location is already known;
-- no fixture, seed, runner, configuration, or dependency changes are needed.
-
-If any condition is false—or cannot be confirmed with a targeted lookup—the work has broad test impact.
-
-- When subagents are available, delegate broad-impact work to one subagent.
-- When subagents are unavailable, the main agent (current session) handles it as a fallback.
-
-### Execute the binding
-
-**The agent that owns this phase** reads and follows [references/test-binding.md](references/test-binding.md). If you don't own this phase, you don't need to read `test-binding.md`.
-
-For delegated work, provide the subagent with:
-
-- the approved feature-file paths;
-- the exact approved scenario titles;
-- the path to `references/test-binding.md`.
-
-The subagent follows applicable project instructions, changes no production code, and returns the contract's `RED` or `BLOCKED` report. Wait for that report before starting implementation.
-
-**Gate 2**: every approved scenario is bound, validators are clean, and focused tests are red for the missing behavior. Scenarios keep `@unimplemented` through this phase; the tag reflects production code, not tests.
-
-## 2/3 — Implement
-
-1. Implement only what the approved scenarios require.
-2. Respect the project's architecture and validation rules.
-3. Run the focused scope after each unit of work and fix failures caused by the change.
-4. As soon as one scenario's bound test is green, remove `@unimplemented` from that scenario in its `.feature` file — one scenario at a time, in the same unit of work. Never strip the tag in bulk up front; if the run stops midway, the remaining tags show exactly what is still undone.
-5. After two failed attempts on the same test, stop and report the diagnosis and attempts. Leave `@unimplemented` on every scenario that is not green.
-
-**Gate 3**: all bound tests are green, no test was weakened or deleted to achieve it, and no green scenario still carries `@unimplemented`.
+**Gate 3:** every bound test that could run is green, none weakened or deleted, no green scenario still `@unimplemented`.
 
 ## 3/3 — Verify
 
-Verify the completed behavior from narrowest to broadest. A small change (one test file, one production unit) runs parity plus the focused tests; every other size runs the full sequence below.
-
-1. Revalidate every changed BDD artifact:
-```bash
-node <bdd skill dir>/scripts/check-test.mjs <changed test files>
-node <bdd skill dir>/scripts/bdd-parity.mjs
-<project test command for every touched configured level>
-<project lint / typecheck>
-```
-
-2. Run the focused tests for the approved scenarios and related files. Use commands already defined by the project (e.g. lint, typecheck, unit tests, E2E, integration, etc.); do not guess or introduce new verification tooling.
-
-3. Review the final diff and confirm:
-- each production change supports an approved scenario;
-- no test was removed, skipped, or weakened;
-- `@unimplemented` remains only on scenarios the user agreed to defer; every green scenario has lost it;
-- no unrelated files or behavior were changed.
-
-If a check fails, fix failures caused by this work and rerun the affected verification sequence. Report unrelated or environment-blocked failures with the exact command and result, explaining why it failed; never describe an unrun or failing check as passing.
-
-Verification is complete only when BDD validators and parity are clean, all touched test levels pass, required project checks pass, and the final diff remains within the approved scope. Remove unused imports and leave nothing deferred beyond explicitly tagged `@unimplemented` scenarios.
+1. Run `node <bdd dir>/scripts/bdd-verify.mjs` — one call: lint of changed specs/tests, parity, configured tests for every touched level (scoped to changed test files), lint, typecheck, run concurrently. Add `--all` for L track or when shared code changed. A `skip` line means a command is missing from config: run the project's equivalent yourself and report the gap.
+2. Fix failures caused by this work and rerun. Report unrelated or environment failures with the exact command and result; never describe an unrun or failing check as passing.
+3. Review the diff: every production change serves an approved scenario; no test removed, skipped, or weakened; `@unimplemented` removed only from scenarios whose bound test ran green in this session — a test that could not run (environment, migration, unavailable runner) keeps the tag and is listed in the report with the reason; no unrelated files; no unused imports.
+4. **L track:** when subagents are available, run an independent diff review (e.g. `code-review`) in the background while verify runs, and address its confirmed findings.
 
 ## Report
 
+Run `node <bdd dir>/scripts/bdd-state.mjs done` — unless scenarios remain `@unimplemented` because the run stopped early; then keep the state so the next session can resume.
+
 ```text
 [bdd-implement finished] <feature>
-goal: (explain in one sentence)
-spec:   specs/<context>/<file>.feature  (+N scenarios: a @unit, b @integration, c @e2e; d @unimplemented)
-tests:  <files>  (N bound)
-code:   <files>
-run:    <command> → pass (N tests) · lint ok · types ok · parity ok
+goal:  <one sentence>
+spec:  specs/<context>/<file>.feature  (+N scenarios: a @unit, b @integration, c @e2e; d @unimplemented)
+tests: <files>  (N bound)
+code:  <files>
+run:   bdd-verify → <ok checks> · <failures/skips, if any>
+kept:  <scenarios still @unimplemented> — <why: not run / deferred / blocked>
 ```

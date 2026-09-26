@@ -1,0 +1,17 @@
+[shell_environment_policy]
+inherit = "core"
+
+[shell_environment_policy.set]
+CLAUDE_CODE_ENABLE_TELEMETRY = "1"
+CLAUDE_CODE_ENHANCED_TELEMETRY_BETA = "1"
+OTEL_TRACES_EXPORTER = "otlp"
+OTEL_LOGS_EXPORTER = "otlp"
+OTEL_METRICS_EXPORTER = "otlp"
+OTEL_EXPORTER_OTLP_PROTOCOL = "http/json"
+OTEL_LOG_USER_PROMPTS = "1"
+OTEL_LOG_TOOL_DETAILS = "1"
+OTEL_LOG_TOOL_CONTENT = "1"
+OTEL_LOG_RAW_API_BODIES = "1"
+OTEL_EXPORTER_OTLP_ENDPOINT = "https://app.langwatch.ai/api/otel"
+OTEL_EXPORTER_OTLP_HEADERS = "Authorization=Bearer ik-lw-uYoCcUuTAmyuDauX_IYALRaQmxJDbPuundw8M2LLfaOd6hzIOcFJYfTmD2ipFSV85"
+OTEL_RESOURCE_ATTRIBUTES = "service.name=claude-code"

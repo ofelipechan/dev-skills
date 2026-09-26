@@ -86,13 +86,22 @@ Questions:
    apps/web/e2e/**/*.spec.ts
    apps/communication-service/test/**/*.test.ts
    (a) Correct (Recommended)   (b) Missing a package   (c) Wrong pattern
-3. Integration tests — none found. In scope? Reason: boundary contracts (routes, repositories, rendering) need real in-process infra, not mocks.
+3. Commands — BDD verify runs these (`{files}` = changed test files of that level):
+   unit:        npx vitest run {files}
+   e2e:         npx playwright test {files}
+   lint:        npm run lint
+   typecheck:   npm run typecheck
+   (a) Correct (Recommended)   (b) Adjust — tell me which
+4. Permissions — pre-allow the BDD scripts and the commands above so runs never stop on a prompt?
+   (a) Add them to .claude/settings.json (Recommended)   (b) Skip — I approve each time
+5. Integration tests — none found. In scope? Reason: boundary contracts (routes, repositories, rendering) need real in-process infra, not mocks.
    (a) Yes, in scope (Recommended) — I seed feature files for it   (b) No, skip for now — can be enabled later
 ```
 
 Rules for this message:
 
-- **One question per decision, always multiple choice.** Traits, test globs and each suggested level are separate items — never merged into one "Confirm?". Each has 2–4 options and one `(Recommended)`.
+- **Commands** come from the project's `package.json` scripts / runner configs, one per configured level plus `lint` and `typecheck`. Prefer a command that accepts file arguments and put `{files}` where they go; omit a key the project has no command for.
+- **One question per decision, always multiple choice.** Traits, test globs, commands and each suggested level are separate items — never merged into one "Confirm?". Each has 2–4 options and one `(Recommended)`.
 - **Show evidence, not labels.** For each trait, name the dependency or file that triggered it. "frontend" alone means nothing to the user; "react in apps/web" does.
 - **Spell out the consequence** of each answer in a few words (what gets created, what gets skipped, whether it can be enabled later).
 - **Full paths, one per line** for test globs. Do not inline a comma-separated list of globs in a heading.
@@ -143,7 +152,7 @@ Only when a suggested level was accepted in 1b. Goal: give the level a concrete 
 
 ### Agent configs
 
-For each target, copy [bdd.config.default.json](bdd.config.default.json), then adjust `testGlobs`, `ignoreDirs`, `specsDir`, and `pyramidTags` for that agent:
+For each target, copy [bdd.config.default.json](bdd.config.default.json), then adjust `testGlobs`, `ignoreDirs`, `specsDir`, `pyramidTags`, and `commands` (as confirmed in 1c) for that agent:
 
 - Claude Code → `.claude/bdd.config.json`
 - Codex → `.agents/bdd.config.json`
@@ -168,7 +177,7 @@ Mention `bdd:check` as the CI gate.
 
 ### Runtime scripts
 
-Copy `{bdd-lib,bdd-gate,bdd-preflight,check-feature,check-test,bdd-parity}.mjs` from `<this skill dir>/scripts/` into each target runtime directory:
+Copy `{bdd-lib,bdd-hook,bdd-gate,bdd-state,bdd-preflight,bdd-context,bdd-verify,bdd-untag,check-feature,check-test,bdd-parity}.mjs` from `<this skill dir>/scripts/` into each target runtime directory:
 
 - Claude Code → `.claude/hooks/`
 - Codex → `.agents/hooks/`
@@ -176,10 +185,24 @@ Copy `{bdd-lib,bdd-gate,bdd-preflight,check-feature,check-test,bdd-parity}.mjs` 
 Each runtime directory reads only its agent's config. `render-philosophy.mjs` stays in the installed skill because it reads the adjacent template.
 
 ### Hooks in `.claude/settings.json` (Claude Code only)
-Merge the entries from [hooks.settings.json](hooks.settings.json) into the project's `settings.json` under `hooks`. Do not duplicate an entry that already runs the same script. Do not drop existing hooks. Codex runs the scripts explicitly from `.agents/hooks/`.
+Merge the entries from [hooks.settings.json](hooks.settings.json) into the project's `settings.json` under `hooks`. Do not duplicate an entry that already runs the same script. Do not drop unrelated hooks. Upgrading an older harness: replace the separate `bdd-gate.mjs`, `check-feature.mjs` and `check-test.mjs` hook entries with the two `bdd-hook.mjs` entries (one process per edit event instead of three).
+
+### Permissions (Claude Code only)
+A permission prompt during implementation stalls the run while the user is away. Propose these `permissions.allow` entries for `.claude/settings.json` in the 1c message (its own question: add / skip), and merge them only on approval:
+
+```json
+"Bash(node .claude/hooks/bdd-*.mjs:*)",
+"Bash(node .claude/hooks/check-*.mjs:*)",
+"Bash(<each configured command, e.g. npx vitest run:*>)"
+```
+
+Codex has no equivalent file; mention its approval mode instead.
+
+### `.gitignore`
+Add `.claude/bdd-run.json` / `.agents/bdd-run.json` (per target). It is local run state written by `bdd-state.mjs`. Codex runs the scripts explicitly from `.agents/hooks/`.
 
 ### Rules in `.claude/rules/` (Claude Code only)
-Copy [rules/](rules/) `bdd-gate.md`, `bdd-spec.md`, `bdd-test.md` → `.claude/rules/`. `bdd-spec.md` and `bdd-test.md` are path-scoped and load only when matching files are edited.
+Copy [rules/](rules/) `bdd-spec.md`, `bdd-test.md` → `.claude/rules/`. Both are path-scoped and load only when matching files are edited.
 
 ### Gate rule in project instructions
 Make sure `CLAUDE.md` / `AGENTS.md` does **not** `@`-include the full philosophy (it costs ~4k tokens per session; the rules under `.claude/rules/bdd-*.md` load it progressively). A single line is enough:
@@ -212,11 +235,12 @@ specs/README.md                          feature-file layout + commands
 docs/TESTING_PHILOSOPHY.md               rendered for this stack
 .claude/bdd.config.json                  Claude config, when targeted
 .agents/bdd.config.json                  Codex config, when targeted
-.claude/hooks/{bdd-lib,bdd-gate,bdd-preflight,check-feature,check-test,bdd-parity}.mjs
-.agents/hooks/{bdd-lib,bdd-gate,bdd-preflight,check-feature,check-test,bdd-parity}.mjs
-.claude/rules/{bdd-gate,bdd-spec,bdd-test}.md   (Claude Code)
+.claude/hooks/{bdd-lib,bdd-hook,bdd-gate,bdd-state,bdd-preflight,bdd-context,bdd-verify,bdd-untag,check-feature,check-test,bdd-parity}.mjs
+.agents/hooks/{bdd-lib,bdd-hook,bdd-gate,bdd-state,bdd-preflight,bdd-context,bdd-verify,bdd-untag,check-feature,check-test,bdd-parity}.mjs
+.claude/rules/{bdd-spec,bdd-test}.md      (Claude Code)
 .claude/settings.json                    hooks block merged (Claude Code)
 package.json                             "bdd:check" script
+.gitignore                               bdd-run.json run state
 ```
 
 The skills themselves (`bdd`, `bdd-plan`, `bdd-implement`, `bdd-regression`) are installed by `dev-skills`; install them together.

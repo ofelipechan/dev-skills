@@ -26,6 +26,13 @@
     "unimplemented"
   ],
   "unimplementedTag": "unimplemented",
+  "commands": {
+    "unit": "npx vitest run {files}",
+    "integration": "npx vitest run {files}",
+    "e2e": "npx playwright test {files}",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck"
+  },
   "phrasingBanlist": [
     {
       "pattern": "\\b(GET|POST|PUT|PATCH|DELETE)s?\\b",

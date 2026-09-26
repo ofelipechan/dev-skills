@@ -8,8 +8,8 @@ Provide or locate:
 
 - approved feature-file paths and exact scenario titles;
 - the current agent's `bdd.config.json`;
-- `docs/TESTING_PHILOSOPHY.md` sections 3 and 7;
-- neighboring tests and the commands that run their scope.
+- the test rules: on Claude Code `.claude/rules/bdd-test.md` loads automatically when you edit a test file; elsewhere read `<bdd skill dir>/references/rules/bdd-test.md` (not the full `docs/TESTING_PHILOSOPHY.md`);
+- one neighboring test file per level and the level's entry in the config `commands` block.
 
 Project instructions remain active. If this contract conflicts with them, stop and report the conflict to the parent.
 
@@ -26,12 +26,12 @@ For every approved scenario:
 2. Follow neighboring test structure and the installed BDD test rule. Bind exactly one test with a JSDoc `@scenario "<title>"` matching the scenario byte-for-byte.
 3. Keep each test focused on one observable invariant and use minimal data.
 4. Leave `@unimplemented` in place while binding; implementation removes it once the test is green. When a scenario must remain deferred, keep it unbound, keep (or add) `@unimplemented`, and report why.
-5. Run:
+5. Run (on Claude Code the lint scripts already run as hooks on every edit; run only parity and the tests):
 
    ```bash
    node <bdd skill dir>/scripts/check-test.mjs <changed test files>
    node <bdd skill dir>/scripts/bdd-parity.mjs
-   <focused test command>
+   <config commands.<level> with {files} = the changed test files>
    ```
 
 The focused tests must be red because production behavior is missing, not because of imports, syntax, setup, or infrastructure.

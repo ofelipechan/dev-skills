@@ -64,8 +64,8 @@ Paths follow each agent's official discovery rules. Supporting another agent is 
 | Skill | Category | What it gives your agent |
 | --- | --- | --- |
 | [`bdd`](packages/skills/skills/development/bdd) | development | Entry point of the gated feature workflow: preflight, harness bootstrap on first use (`specs/`, a `TESTING_PHILOSOPHY.md` rendered for the detected stack, lint + parity scripts, Claude Code hooks and rules), then hands off to `bdd-plan` and `bdd-implement` |
-| [`bdd-plan`](packages/skills/skills/development/bdd-plan) | development | Discovery + Specify: interview (via `grill-me`) → tagged `.feature` files → lint → hard stop for approval. Never touches tests or code |
-| [`bdd-implement`](packages/skills/skills/development/bdd-implement) | development | Bind tests (red) → implement → verify, for approved scenarios only. One binding per scenario, `@unimplemented` removed one green test at a time |
+| [`bdd-plan`](packages/skills/skills/development/bdd-plan) | development | Context → S/M/L track → draft tagged `.feature` files + plan → one approval stop that also resolves open decisions (full `grill-me` interview only for L). Never touches tests or code |
+| [`bdd-implement`](packages/skills/skills/development/bdd-implement) | development | Bind tests (red) → implement → one-call `bdd-verify`, for approved scenarios only. One binding per scenario, `@unimplemented` removed only from green, bound scenarios |
 | [`bdd-regression`](packages/skills/skills/development/bdd-regression) | development | Bug-fix discipline: `@regression` scenario → failing test → fix → prove by reverting |
 | [`code-review`](packages/skills/skills/development/code-review) | development | Severity-tagged findings, one line each, with a concrete fix and a merge verdict |
 | [`domain-mapping`](packages/skills/skills/architecture/domain-mapping) | architecture | Evidence-backed subdomain classification, ubiquitous-language analysis, bounded-context proposals, and a context map |
