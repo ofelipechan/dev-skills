@@ -29,7 +29,7 @@
       "description": "BDD workflow feature development, function or business rule. This skill is user-invoked only — trigger ONLY when the user explicitly types \"/bdd\" or explicitly asks to use BDD (e.g. \"set up BDD\", \"use BDD for this\"). Not for bug fixes (use /bdd-regression) or pure refactors with green tests.",
       "category": "development",
       "path": "development/bdd",
-      "hash": "sha256:7558cd49b81b05d3557c4cd82c418f1b0a9fa9d563db235c6cbc4648c4f8c1fd",
+      "hash": "sha256:f69cbc16c7523dfa34084023fc5f1fee4f0df545277a8425e70752e04b380228",
       "files": [
         "SKILL.md",
         "references/TESTING_PHILOSOPHY.template.md",
@@ -58,7 +58,7 @@
       "description": "Implementation half of the BDD workflow — Bind tests (red), Implement, Verify — for scenarios the user has already approved. Use when the user says \"/bdd-implement\" or asks to implement approved .feature scenarios. Called by /bdd after Gate 1; not for writing or changing scenarios (use /bdd-plan) and not for bug fixes (use /bdd-regression).",
       "category": "development",
       "path": "development/bdd-implement",
-      "hash": "sha256:d52955f09d8be0fafd5590366fd43eb222ae52ec54fa5fec3fd3dd2af82e2da8",
+      "hash": "sha256:47c674c08185f1b2b3b814c81f53c4d5b456a7b9e4c09a0f32f49341d037659c",
       "files": [
         "SKILL.md",
         "references/test-binding.md"
