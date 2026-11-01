@@ -1,6 +1,6 @@
 ---
 name: bdd
-description: BDD workflow feature development, function or business rule. This skill is user-invoked only — trigger ONLY when the user explicitly types "/bdd" or explicitly asks to use BDD (e.g. "set up BDD", "use BDD for this"). Not for bug fixes (use /bdd-regression) or pure refactors with green tests.
+description: BDD workflow feature development, function or business rule. This skill is user-invoked only — trigger ONLY when the user explicitly types "/bdd" or explicitly asks to use BDD (e.g. "set up BDD", "use BDD for this"). Not for bug fixes (use /bdd-regression), pure refactors with green tests, or presentation-only changes (styling, copy, layout, display formatting — TESTING_PHILOSOPHY § 8).
 license: CC-BY-4.0
 metadata:
   author: Felipe Chan - https://github.com/ofelipechan
@@ -28,6 +28,7 @@ These apply to both phase skills.
 - Each implemented scenario has exactly one test binding; scenario titles stay stable (rename title and binding together).
 - Every new scenario starts `@unimplemented`; the tag comes off only when its bound test is green.
 - Test levels are per project: use `pyramidTags` from the current agent's config; adding a level is a separate harness change requiring approval.
+- Presentation-only changes (`docs/TESTING_PHILOSOPHY.md` § 8: styling, copy, layout, display formatting, generic component mechanics, navigation chrome) skip the workflow: edit → lint → check the output. No scenario, no `@regression`.
 - Leave git state untouched unless the user explicitly requests a git operation.
 - Make progress visible through artifacts and gate evidence, not phase narration. Summarize command results; never dump raw output.
 

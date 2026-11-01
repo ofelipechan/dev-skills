@@ -18,6 +18,7 @@ const DEFAULTS = {
   modifierTags: ["regression", "unimplemented"],
   unimplementedTag: "unimplemented",
   phrasingBanlist: [],
+  presentationGlobs: [],
   commands: {},
 };
 
@@ -115,6 +116,11 @@ export function listFeatureFiles(cfg) {
 export function listTestFiles(cfg) {
   const regexes = cfg.testGlobs.map(globToRegex);
   return walk(ROOT, cfg).filter((f) => regexes.some((r) => r.test(f)));
+}
+
+/** Paths whose edits are presentation-only (TESTING_PHILOSOPHY § 8); the gate hook stays silent there. */
+export function isPresentationFile(rel, cfg) {
+  return (cfg.presentationGlobs ?? []).map(globToRegex).some((r) => r.test(rel));
 }
 
 export function isTestFile(rel, cfg) {

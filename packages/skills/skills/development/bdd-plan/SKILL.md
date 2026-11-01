@@ -17,7 +17,7 @@ Standalone: run `node <bdd dir>/scripts/bdd-context.mjs --agent <agent> <keyword
 
 Use the `bdd-context` output: `matches` names the feature files to read; `config.commands` and `testGlobs` locate tests. Then read only what the plan needs, in parallel: the matching feature files, the production code the feature touches, and one neighboring test file per level you expect to use. Production code beats documentation. Do not read `docs/TESTING_PHILOSOPHY.md` — on Claude Code its extracts load automatically when you edit specs or tests; on Codex read `<bdd dir>/references/rules/bdd-spec.md` before drafting.
 
-Facts are your job; decisions are the user's. An **open decision** is one that changes what a scenario's `Then` asserts (limits, error outcomes, authorization, visible results) and that code, specs, and the request do not settle. Anything that does not change observable behavior is yours to decide.
+Facts are your job; decisions are the user's. An **open decision** is one that changes what a scenario's `Then` asserts (limits, error outcomes, authorization, visible results) and that code, specs, and the request do not settle. Anything that does not change observable behavior is yours to decide. Presentation (styling, copy, layout, display formatting) is not a spec decision — skip it.
 
 ## 2. Track
 
@@ -33,7 +33,7 @@ The user can force a track ("full" → L). State the track in the Gate 1 report.
 
 ## 3. Draft
 
-1. Write or update the `.feature` files. Every scenario gets exactly one configured pyramid tag (lowest level that proves it), modifiers beside it, and a title unique across `specs/`. Every **new** scenario also gets `@unimplemented`; existing scenarios keep their tags.
+1. Write or update the `.feature` files. Only behaviour that earns a scenario (`docs/TESTING_PHILOSOPHY.md` § 3) gets one; presentation (§ 8) stays in the code. Every scenario gets exactly one configured pyramid tag (lowest level that proves it), modifiers beside it, and a title unique across `specs/`. Every **new** scenario also gets `@unimplemented`; existing scenarios keep their tags.
 2. For each open decision, draft the scenario with the **recommended** option and record the alternatives.
 3. Lint: on Claude Code the `check-feature` hook reports on every edit — fix its findings; elsewhere run `node <bdd dir>/scripts/check-feature.mjs <files>`.
 4. Before the gate, check the draft against the usual gaps — empty/invalid input, limits, unauthorized actor, not-found, duplicates, failure of an external dependency — and either cover each or list it as deliberately not covered.

@@ -157,7 +157,7 @@ For each target, copy [bdd.config.default.json](bdd.config.default.json), then a
 - Claude Code → `.claude/bdd.config.json`
 - Codex → `.agents/bdd.config.json`
 
-Configs are independent and may differ. Preserve an existing agent's values unless the user approves changing that agent. Non-JS runners also need an adjusted `phrasingBanlist`.
+Configs are independent and may differ. Preserve an existing agent's values unless the user approves changing that agent. Non-JS runners also need an adjusted `phrasingBanlist`. `presentationGlobs` (optional) lists paths that hold presentation-only code (e.g. UI components, styles, templates); the gate hook stays silent when they are edited. Leave it empty when presentation and logic share files.
 
 ### Parity script in `package.json`
 For one target, add its parity command if `package.json` exists and the key is absent:

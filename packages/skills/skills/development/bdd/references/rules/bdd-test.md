@@ -11,7 +11,7 @@ paths:
 Extract of `docs/TESTING_PHILOSOPHY.md` § 1, § 4, § 5, § 7, § 8. Hook `check-test.mjs` enforces binding + naming; fix its errors before moving on.
 
 ## Binding
-Every tagged scenario has exactly one test bound to it. A bound test carries a JSDoc directly above it: one sentence stating the **rule**, then `@scenario "<title>"` byte-identical to a `Scenario:` line in `specs/`. Tests without a binding are allowed (extra invariants, § 8 material) — the parity that matters is scenario → test, not test → scenario.
+Every tagged scenario has exactly one test bound to it. A bound test carries a JSDoc directly above it: one sentence stating the **rule**, then `@scenario "<title>"` byte-identical to a `Scenario:` line in `specs/`. Tests without a binding are allowed (extra invariants, presentation code with real branches — § 8) — the parity that matters is scenario → test, not test → scenario.
 
 ```ts
 /**
@@ -23,7 +23,7 @@ it("rejects the request when the session token has expired", () => { /* ... */ }
 
 - One scenario ↔ one test. `it.each` takes one annotation above the call.
 - `it.skip` / `it.todo` carry no annotation — tag the scenario `@unimplemented` instead.
-- Items in § 8 (types, pass-throughs, third-party internals, static config, wiring without branching, styling) get no scenario and no test.
+- Items in § 8 get no scenario: types, pass-throughs, third-party internals, static config, wiring without branching, and presentation (styling, copy, layout, display formatting, generic component mechanics, navigation chrome). Pure styling gets no test either.
 
 ## Naming
 - **No "should"**. Present tense, active voice: `it("signs in a user")`.

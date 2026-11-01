@@ -75,5 +75,6 @@
       "pattern": "\\b(Authorization header|JWT|token payload)\\b",
       "hint": "transport detail - say 'signed in with a valid session'"
     }
-  ]
+  ],
+  "presentationGlobs": []
 }

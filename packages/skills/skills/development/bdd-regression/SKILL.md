@@ -1,6 +1,6 @@
 ---
 name: bdd-regression
-description: Bug-fix workflow — reproduce with a failing @regression scenario + test at the lowest sufficient level, then fix, then prove the test fails with the fix reverted. Use when the user reports a bug, a wrong result, an error in production, or says "/bdd-regression". Not for new behaviour (use /bdd).
+description: Bug-fix workflow — reproduce with a failing @regression scenario + test at the lowest sufficient level, then fix, then prove the test fails with the fix reverted. Use when the user reports a bug, a wrong result, an error in production, or says "/bdd-regression". Not for new behaviour (use /bdd) or presentation bugs (styling, copy, layout, display formatting — fix directly, TESTING_PHILOSOPHY § 8).
 license: CC-BY-4.0
 metadata:
   author: Felipe Chan - https://github.com/ofelipechan
@@ -12,6 +12,8 @@ metadata:
 A bug is a rule the specs missed. The fix ships with the scenario that would have caught it. Order: **scenario → failing test → fix → prove → run**.
 
 ## 1. Pin the rule
+
+Presentation bug (`docs/TESTING_PHILOSOPHY.md` § 8)? Not this workflow: fix directly, lint, check the output.
 
 1. Restate the bug as a rule for the user: *given X, when Y, then Z (currently Z')*. If the expected behaviour is unclear or contested, ask — do not guess.
 2. Locate the context: which `specs/<context>/*.feature` owns this behaviour? Read it. Often an existing scenario is *almost* right (wrong step, missing edge) — prefer editing it over adding a near-duplicate.

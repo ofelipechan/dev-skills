@@ -123,7 +123,7 @@ Rule of thumb: if two assertions could fail independently for different reasons,
 
 ## 2. Coverage Is Mandatory
 
-Every change ships with tests. No exceptions.
+Every behaviour change ships with tests. Presentation-only changes (§ 8) are the one exception.
 
 - **New features**: every tagged scenario in the feature file has a test (§ 7).
 - **Bug fixes**: a `@regression` test (§ 9).
@@ -146,6 +146,24 @@ Each level has a distinct purpose. **Do not prove the same rule at two levels.**
 | **Unit** | pure logic and branches | the unit under test | all collaborators | as many as needed |
 
 What "faked" means in practice: § 4.
+
+### What earns a scenario
+
+A scenario guards **behaviour someone depends on**, not how it looks. Write one when the rule is about:
+
+- state created, changed or removed — including defaults a person relies on;
+- a computed or derived result (totals, prices, limits, overdue, expired, available);
+- who may do or see what (authentication, authorization, ownership, tenant isolation, data hidden or redacted for privacy);
+- a lifecycle or status transition, including what time triggers (reminders, expiry);
+- a validation rule — what is accepted or rejected, and why;
+- which records a list or search includes, excludes or ranks first, when a rule decides it;
+- what a message, document or notification must tell its reader to act or comply;
+- repeated or simultaneous actions (no double charge, no double booking);
+- a side effect another system or person observes (message sent, event emitted, record synced).
+
+Litmus: **would changing it need a product or business decision?** Yes → scenario. Only a design or copy decision → no scenario; it lives in the code (§ 8), covered by a unit test with no scenario and no `@scenario` binding when it has real branches (§ 8). Unsure → ask; never drop a rule silently.
+
+**Judge the purpose, not the form.** Showing, hiding, enabling, ordering or formatting counts only when it enforces a rule. "The title is blue" → no scenario. "The confirmation states date, address and support contact so the customer knows when, where and whom to call" → scenario. When a presentation-sounding scenario hides a purpose, reshape it around that purpose and leave styling out of its steps.
 
 ### Tags
 
@@ -174,7 +192,7 @@ Scenario: a user with an expired session is asked to sign in again
 
 ### Decision tree
 
-Apply in order; stop at first match.
+Only behaviour that earns a scenario (above) reaches this tree. Apply in order; stop at first match.
 
 ```text
 <!-- IF:e2e -->
@@ -183,10 +201,8 @@ Is this a core happy path of a stable, established feature?
 <!-- ENDIF:e2e -->
 
 <!-- IF:frontend -->
-Is this testing UI elements exist? (form fields, buttons, layout)
-  -> @integration
-
-Is this testing navigation/routing only?
+Is a UI element, state or route there because a rule requires it?
+(a field one option requires, an action blocked in some state, an access-controlled page)
   -> @integration
 <!-- ENDIF:frontend -->
 
@@ -270,7 +286,7 @@ const user = { id: "u1", role: "guest" };
 
 Behaviour drives everything. Requirements are settled with the user first, written as a feature file, approved, and only then turned into tests and code. Each step is a gate — do not move to the next until the current one is complete.
 
-1. **Describe the behaviour.** Write or update the `.feature` file in `specs/` (layout: `specs/README.md`; phrasing: § 7). Scenarios *are* the acceptance criteria. If any rule is unclear, ask — do not write a scenario on a guess.
+1. **Describe the behaviour.** Write or update the `.feature` file in `specs/` (layout: `specs/README.md`; phrasing: § 7). Scenarios *are* the acceptance criteria — only for behaviour that earns one (§ 3); presentation stays in the code (§ 8). If any rule is unclear, ask — do not write a scenario on a guess.
 2. **Wait for approval.** List the files added/modified with the lint output (unfixed), share them. **Stop.** No test files, no production code until the scenarios are explicitly approved. Reviewer (human or agent) challenges missing edge cases here — it is far cheaper to fix a scenario than a test or an implementation.
 3. **Write the tests.** On approval, write the test files that bind every tagged scenario (§ 7), at the level the decision tree assigns (§ 3). Tests fail at this point — that is expected (Red). Do not touch production code yet.
 4. **Write the production code.** Only after all test files exist, implement the minimum code that makes them pass (Green). No extra behaviour beyond the approved scenarios.
@@ -321,14 +337,35 @@ The same table applies to `it()` titles: `it("responds 401")` → `it("is reject
 
 ---
 
-## 8. What We Don't Test
+## 8. What Gets No Scenario
+
+The specs hold behaviour only. Everything below stays in the code: no scenario, no `@scenario` binding. Keeping it out of `specs/` keeps feature files short and cheap to read.
+
+### Not tested
 
 - Type definitions and interfaces
 - Simple pass-throughs with no logic (a function that only forwards args)
 - Third-party library internals
 - Constants and static config (unless computed)
 - Framework wiring that has no branching (e.g. a route file that only registers handlers)
-- Styling / visual appearance in unit tests <!-- only:frontend -->
+- Pure styling — nothing to prove beyond a visual check <!-- only:frontend -->
+
+### Presentation — no scenario
+
+- Message wording and output layout (error copy, log lines, report or CLI formatting), unless another system parses it
+<!-- IF:frontend -->
+- Visual: colour, typography, icons, spacing, highlighting, field order, columns, layout
+- Copy: labels, placeholders, headings and wording style — not the facts a message or screen must convey (§ 3)
+- Generic component mechanics: tooltips, dropdowns, modals opening and closing, sort toggles, copy buttons, loading skeletons and spinners, focus, ARIA, cursor
+- Display formatting: how dates, numbers, currency and masks look — not whether the right value reaches the reader (§ 3)
+- Navigation chrome: back buttons, breadcrumbs, links between pages
+<!-- ENDIF:frontend -->
+
+Presentation changes skip the BDD workflow (§ 6): edit → lint → check the output. A presentation bug is fixed directly, without a `@regression` scenario (§ 9).
+
+### Unbound tests
+
+Presentation code with real branches (a layout algorithm, a label formatter, a sort mapper) may get plain unit tests **without** a scenario or `@scenario` binding. Parity runs scenario → test only, so these tests protect the logic without adding to the specs.
 
 ---
 
