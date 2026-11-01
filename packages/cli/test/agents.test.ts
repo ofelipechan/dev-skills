@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import path from "node:path";
-import { getAgent, listAgents, isAgentId, resolveAgentSkillsDir, resolveCanonicalSkillsDir } from "../src/services/agents.js";
+import { getAgent, listAgents, isAgentId, resolveAgentHarnessDir, resolveAgentSkillsDir, resolveCanonicalSkillsDir } from "../src/services/agents.js";
 import { UnsupportedAgentError } from "../src/services/errors.js";
 import type { InstallContext } from "../src/services/types.js";
 
@@ -37,5 +37,13 @@ describe("agents registry", () => {
   it("resolves the canonical directory per scope", () => {
     expect(resolveCanonicalSkillsDir("project", ctx)).toBe(path.join(ctx.cwd, ".agents", "skills"));
     expect(resolveCanonicalSkillsDir("global", ctx)).toBe(path.join(ctx.home, ".agents", "skills"));
+  });
+
+  /** Harness files (hooks, rules, config) live in each agent's root dir; only Claude Code has a settings file with hooks. */
+  it("resolves harness directories and settings files per agent", () => {
+    expect(resolveAgentHarnessDir(getAgent("claude-code"), "project", ctx)).toBe(path.join(ctx.cwd, ".claude"));
+    expect(resolveAgentHarnessDir(getAgent("codex"), "global", ctx)).toBe(path.join(ctx.home, ".agents"));
+    expect(getAgent("claude-code").settingsFile).toBe("settings.json");
+    expect(getAgent("codex").settingsFile).toBeUndefined();
   });
 });

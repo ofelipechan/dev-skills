@@ -29,9 +29,10 @@
       "description": "BDD workflow feature development, function or business rule. This skill is user-invoked only — trigger ONLY when the user explicitly types \"/bdd\" or explicitly asks to use BDD (e.g. \"set up BDD\", \"use BDD for this\"). Not for bug fixes (use /bdd-regression), pure refactors with green tests, or presentation-only changes (styling, copy, layout, display formatting — TESTING_PHILOSOPHY § 8).",
       "category": "development",
       "path": "development/bdd",
-      "hash": "sha256:9ed1776642636e2ba3d95ec31eb697cd81c0037f7e6c94d9165648c7a9457cd2",
+      "hash": "sha256:1cd22f1c1e2e9aac98c9322b3b6d050e8fd4ff63e81f9f7dbdf499b8ed56f2aa",
       "files": [
         "SKILL.md",
+        "harness.json",
         "references/TESTING_PHILOSOPHY.template.md",
         "references/bdd.config.default.json",
         "references/hooks.settings.json",
@@ -58,9 +59,10 @@
       "description": "Implementation half of the BDD workflow — Bind tests (red), Implement, Verify — for scenarios the user has already approved. Use when the user says \"/bdd-implement\" or asks to implement approved .feature scenarios. Called by /bdd after Gate 1; not for writing or changing scenarios (use /bdd-plan) and not for bug fixes (use /bdd-regression).",
       "category": "development",
       "path": "development/bdd-implement",
-      "hash": "sha256:47c674c08185f1b2b3b814c81f53c4d5b456a7b9e4c09a0f32f49341d037659c",
+      "hash": "sha256:139c3cef11bfdaae890bce28e90d4910a8731e64e92bf853746f4d2943492c51",
       "files": [
         "SKILL.md",
+        "harness.json",
         "references/test-binding.md"
       ]
     },
@@ -69,9 +71,10 @@
       "description": "Planning half of the BDD workflow — gather context, pick a track (S/M/L), draft tagged .feature scenarios with a plan, and stop at one approval gate that also resolves open decisions. Use when the user says \"/bdd-plan\" or wants scenarios written before any test or code. Called by /bdd; not for tests or production code (use /bdd-implement) and not for bug fixes (use /bdd-regression).",
       "category": "development",
       "path": "development/bdd-plan",
-      "hash": "sha256:850d84b49364da86ba81481f7c9dcf7dda04a7334f178bb567411c21c50df571",
+      "hash": "sha256:e3281278677ac19d7278e97f90d8c99eb56f6f1fe3f3b8fa0d81c4f47bd2dcf9",
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "harness.json"
       ]
     },
     {
@@ -79,9 +82,10 @@
       "description": "Bug-fix workflow — reproduce with a failing @regression scenario + test at the lowest sufficient level, then fix, then prove the test fails with the fix reverted. Use when the user reports a bug, a wrong result, an error in production, or says \"/bdd-regression\". Not for new behaviour (use /bdd) or presentation bugs (styling, copy, layout, display formatting — fix directly, TESTING_PHILOSOPHY § 8).",
       "category": "development",
       "path": "development/bdd-regression",
-      "hash": "sha256:d2874a52a7263ec4d4ad65548fe4df9d92f56b1ab342facc59a56db11a4a2015",
+      "hash": "sha256:fd1c721143ae7e54d6a07ca1e0fd373998f3f76499228130c7a4da88712437d0",
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "harness.json"
       ]
     },
     {

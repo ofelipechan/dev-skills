@@ -16,6 +16,11 @@ export interface AgentConfig {
   projectSkillsDir: string;
   /** May start with `~/`, resolved against the user's home. */
   globalSkillsDir: string;
+  /** Agent root holding harness files a skill sets up (hooks, rules, config). Same path rules as the skills dirs. */
+  projectHarnessDir: string;
+  globalHarnessDir: string;
+  /** JSON settings file inside the harness dir whose `hooks` may run harness files. */
+  settingsFile?: string;
 }
 
 /** Normalized request served by the installer for both wizard and CLI flags. */
@@ -116,6 +121,8 @@ export interface UpdateResult {
 export interface RemoveResult {
   removed: InstalledTarget[];
   canonicalRemoved: string[];
+  harnessRemoved: string[];
+  settingsUpdated: string[];
 }
 
 export interface InstalledSkill {

@@ -5,6 +5,7 @@
  * Sources (verified 2026-09):
  * - Claude Code: `.claude/skills/<name>/SKILL.md` (project), `~/.claude/skills/` (personal)
  * - Codex:       `.agents/skills/` (repo), `~/.agents/skills/` (user); follows symlinks
+ * - Claude Code hooks: `hooks` in `.claude/settings.json`
  */
 import path from "node:path";
 import { UnsupportedAgentError } from "./errors.js";
@@ -16,12 +17,17 @@ const AGENTS: Record<AgentId, AgentConfig> = {
     name: "Claude Code",
     projectSkillsDir: ".claude/skills",
     globalSkillsDir: "~/.claude/skills",
+    projectHarnessDir: ".claude",
+    globalHarnessDir: "~/.claude",
+    settingsFile: "settings.json",
   },
   codex: {
     id: "codex",
     name: "OpenAI Codex",
     projectSkillsDir: ".agents/skills",
     globalSkillsDir: "~/.agents/skills",
+    projectHarnessDir: ".agents",
+    globalHarnessDir: "~/.agents",
   },
 };
 
@@ -57,4 +63,8 @@ export function resolveAgentSkillsDir(agent: AgentConfig, scope: Scope, ctx: Pic
 
 export function resolveCanonicalSkillsDir(scope: Scope, ctx: Pick<InstallContext, "cwd" | "home">): string {
   return expand(CANONICAL[scope], ctx);
+}
+
+export function resolveAgentHarnessDir(agent: AgentConfig, scope: Scope, ctx: Pick<InstallContext, "cwd" | "home">): string {
+  return expand(scope === "project" ? agent.projectHarnessDir : agent.globalHarnessDir, ctx);
 }

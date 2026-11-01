@@ -9,6 +9,7 @@ import path from "node:path";
 import { AGENT_IDS, getAgent, resolveAgentSkillsDir, resolveCanonicalSkillsDir } from "./agents.js";
 import { DestinationExistsError, DevSkillsError, NotManagedError, SymlinkError } from "./errors.js";
 import { copyDirectory, linkDirectory, pathKind, removePath } from "./fs-utils.js";
+import { applyHarnessRemoval, planHarnessRemoval, readHarness, type Harness, type HarnessPlan } from "./harness.js";
 import { hashDirectory } from "./hash.js";
 import { readLockfile, writeLockfile } from "./lockfile.js";
 import { findSkill } from "./registry.js";
@@ -195,10 +196,15 @@ export async function remove(req: RemoveRequest, ctx: InstallContext): Promise<R
   const lock = await readLockfile(req.scope, ctx);
   for (const name of req.skills) if (!lock.skills[name]) throw new NotManagedError(name, req.scope);
 
-  const result: RemoveResult = { removed: [], canonicalRemoved: [] };
+  const result: RemoveResult = { removed: [], canonicalRemoved: [], harnessRemoved: [], settingsUpdated: [] };
+  // Harness files another installed skill also declares (shared config, run state) stay until the last one goes.
+  const claimed = await claimedHarnessFiles(lock, new Set(req.skills), ctx);
   for (const name of req.skills) {
     const entry = lock.skills[name]!;
     const canonical = path.join(resolveCanonicalSkillsDir(entry.scope, ctx), name);
+
+    // Plan harness cleanup before touching anything: a bad harness.json or settings file aborts with nothing written.
+    const harnessPlans = await planHarness(name, entry, claimed, ctx);
 
     for (const id of entry.agents) {
       const dest = path.join(resolveAgentSkillsDir(getAgent(id), entry.scope, ctx), name);
@@ -217,10 +223,57 @@ export async function remove(req: RemoveRequest, ctx: InstallContext): Promise<R
       result.canonicalRemoved.push(canonical);
     }
 
+    for (const plan of harnessPlans) {
+      const done = await applyHarnessRemoval(plan);
+      result.harnessRemoved.push(...done.removed);
+      if (done.settings) result.settingsUpdated.push(done.settings);
+    }
+
     delete lock.skills[name];
     await writeLockfile(req.scope, ctx, lock);
   }
   return result;
+}
+
+/** harness.json is read from the installed copy, so remove works offline and matches what was installed. */
+async function readInstalledHarness(name: string, entry: LockEntry, ctx: InstallContext): Promise<Harness | undefined> {
+  const dirs = entry.strategy === "symlink"
+    ? [path.join(resolveCanonicalSkillsDir(entry.scope, ctx), name)]
+    : entry.agents.map((id) => path.join(resolveAgentSkillsDir(getAgent(id), entry.scope, ctx), name));
+  for (const dir of dirs) {
+    if ((await pathKind(dir)) === "missing") continue;
+    const harness = await readHarness(name, dir);
+    if (harness) return harness;
+  }
+  return undefined;
+}
+
+/** Per agent: harness paths declared by skills that stay installed. */
+async function claimedHarnessFiles(lock: Lockfile, removing: Set<string>, ctx: InstallContext): Promise<Map<AgentId, Set<string>>> {
+  const claimed = new Map<AgentId, Set<string>>();
+  for (const [name, entry] of Object.entries(lock.skills)) {
+    if (removing.has(name)) continue;
+    const harness = await readInstalledHarness(name, entry, ctx);
+    if (!harness) continue;
+    for (const id of entry.agents) {
+      const set = claimed.get(id) ?? new Set<string>();
+      for (const f of harness.files) set.add(f);
+      claimed.set(id, set);
+    }
+  }
+  return claimed;
+}
+
+async function planHarness(name: string, entry: LockEntry, claimed: Map<AgentId, Set<string>>, ctx: InstallContext): Promise<HarnessPlan[]> {
+  const harness = await readInstalledHarness(name, entry, ctx);
+  if (!harness) return [];
+  const plans: HarnessPlan[] = [];
+  for (const id of entry.agents) {
+    const keep = claimed.get(id);
+    const own = { files: harness.files.filter((f) => !keep?.has(f)) };
+    plans.push(await planHarnessRemoval(own, getAgent(id), entry.scope, ctx));
+  }
+  return plans;
 }
 
 // ---------- list ----------

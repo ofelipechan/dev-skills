@@ -61,6 +61,7 @@ Key files in `packages/cli/src/services/`:
 | `downloader.ts` | `GitHubSource` — raw file downloads only, no GitHub API | Swap source = implement `RegistrySource`; installer unchanged |
 | `lockfile.ts` | Read/write `.agents/skills-lock.json` (project) / `~/.agents/skills-lock.json` (global), Zod-validated | Lockfile is the source of truth for what dev-skills owns |
 | `hash.ts` | `sha256:` over sorted `rel\0filehash` pairs; CRLF normalized to LF | Same function used by the generator and the installer, so hashes are comparable |
+| `harness.ts` | Read `harness.json`, plan + apply removal of declared harness files and their settings hooks | Never touches an undeclared path |
 | `fs-utils.ts` | `copyDirectory`, `linkDirectory` (junction on win32, relative symlink elsewhere), `pathKind`, `removePath` | No business rules |
 | `errors.ts` | `DevSkillsError` subclasses with a `code` (`SKILL_NOT_FOUND`, `DESTINATION_EXISTS`, `SYMLINK_FAILED`, `NOT_MANAGED`, …) | Commands map these to messages; services just throw |
 | `context.ts` | Builds the real `InstallContext` (cwd, home, source from env) | Tests build their own with temp dirs |
@@ -73,6 +74,7 @@ Key files in `packages/cli/src/services/`:
 - **Symlink mode** puts one canonical copy in `.agents/skills/<name>` and links every other agent to it. An agent whose own dir *is* the canonical dir (Codex) gets no link (`self: true`).
 - **`update`** compares registry hash vs lockfile hash; if the installed directory hash differs from the lockfile hash the skill is reported as `modified` and skipped unless `--force`.
 - Hashes ignore line endings, so a Windows checkout never looks modified.
+- **Harness cleanup.** A skill whose setup writes outside its folder (hooks, rules, config) lists those paths in `harness.json` at the skill root, relative to the agent dir (`.claude`, `.agents`). `remove` reads it from the installed copy, deletes only those regular files (plus parent dirs left empty), and strips `settings.json` hook entries that run them. A path another still-installed skill also declares is kept (e.g. `bdd.config.json`, shared by the bdd family) and goes with the last skill that declares it. It plans before writing: an invalid `harness.json` or settings file aborts with nothing removed. Keep `harness.json` in sync with what the skill's init creates.
 
 ## Workflow
 

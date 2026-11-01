@@ -197,7 +197,13 @@ async function runRemove(ctx: InstallContext): Promise<void> {
   if (!sure) return;
 
   const result = await remove({ skills, scope }, ctx);
-  p.log.success(result.removed.map((t) => `removed ${t.skill} (${t.agent}) ${t.path}`).join("\n"));
+  p.log.success(
+    [
+      ...result.removed.map((t) => `removed ${t.skill} (${t.agent}) ${t.path}`),
+      ...result.harnessRemoved.map((f) => `removed harness ${f}`),
+      ...result.settingsUpdated.map((s) => `updated hooks in ${s}`),
+    ].join("\n"),
+  );
 }
 
 async function runList(ctx: InstallContext): Promise<void> {

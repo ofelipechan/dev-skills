@@ -243,4 +243,4 @@ package.json                             "bdd:check" script
 .gitignore                               bdd-run.json run state
 ```
 
-The skills themselves (`bdd`, `bdd-plan`, `bdd-implement`, `bdd-regression`) are installed by `dev-skills`; install them together.
+The skills themselves (`bdd`, `bdd-plan`, `bdd-implement`, `bdd-regression`) are installed by `dev-skills`; install them together. `dev-skills remove bdd` deletes the hook scripts, rules, configs and run state listed in [../harness.json](../harness.json) and strips their `settings.json` hook entries; `specs/`, `docs/` and `package.json` stay. `bdd.config.json` and `bdd-run.json` are shared with `bdd-plan`, `bdd-implement` and `bdd-regression` (each declares them) and are removed only with the last of them. Adding a file to this list? Add it to `harness.json` too.

@@ -30,6 +30,8 @@ export function printUpdateResult(result: UpdateResult): void {
 export function printRemoveResult(result: RemoveResult): void {
   for (const t of result.removed) out(`Removed ${t.skill.padEnd(20)} ${getAgent(t.agent).name.padEnd(14)} ${relative(t.path)}`);
   for (const c of result.canonicalRemoved) out(`Removed canonical ${relative(c)}`);
+  for (const f of result.harnessRemoved) out(`Removed harness   ${relative(f)}`);
+  for (const s of result.settingsUpdated) out(`Updated hooks in  ${relative(s)}`);
 }
 
 export function printAvailable(registry: Registry, installed: InstalledSkill[]): void {

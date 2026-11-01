@@ -52,6 +52,18 @@ export class NotManagedError extends DevSkillsError {
   }
 }
 
+export class InvalidSettingsError extends DevSkillsError {
+  constructor(file: string, detail: string) {
+    super(`Invalid settings file ${file}: ${detail}`, "INVALID_SETTINGS");
+  }
+}
+
+export class InvalidHarnessError extends DevSkillsError {
+  constructor(skill: string, detail: string) {
+    super(`Invalid harness.json in skill "${skill}": ${detail}`, "INVALID_HARNESS");
+  }
+}
+
 export class SourceError extends DevSkillsError {
   constructor(detail: string) {
     super(`Could not reach the skills source: ${detail}`, "SOURCE_UNAVAILABLE");

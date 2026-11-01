@@ -1,0 +1,19 @@
+{
+  "files": [
+    "hooks/bdd-lib.mjs",
+    "hooks/bdd-hook.mjs",
+    "hooks/bdd-gate.mjs",
+    "hooks/bdd-state.mjs",
+    "hooks/bdd-preflight.mjs",
+    "hooks/bdd-context.mjs",
+    "hooks/bdd-verify.mjs",
+    "hooks/bdd-untag.mjs",
+    "hooks/check-feature.mjs",
+    "hooks/check-test.mjs",
+    "hooks/bdd-parity.mjs",
+    "rules/bdd-spec.md",
+    "rules/bdd-test.md",
+    "bdd.config.json",
+    "bdd-run.json"
+  ]
+}
